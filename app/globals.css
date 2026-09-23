@@ -45,7 +45,7 @@
   
   --color-shadow: rgba(0, 0, 0, 0.08);
 
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-yekan-bakh), var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 
   /* انیمیشن‌های سفارشی - Tailwind v4 خودش از این توکن‌ها یوتیلیتی animate-* می‌سازه */

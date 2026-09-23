@@ -1,11 +1,21 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UserProvider } from '@/contexts/UserContext'; // ✅ فقط ایمپورت
 import { ToastProvider } from '@/components/NotificationToast';
 import "leaflet/dist/leaflet.css";
 import './globals.css';
+
+// فونت اصلی سایت (فارسی)
+const yekanBakh = localFont({
+  src: './fonts/YekanBakh-Regular.ttf',
+  weight: '400',
+  style: 'normal',
+  variable: '--font-yekan-bakh',
+  display: 'swap',
+});
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -52,8 +62,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fa" dir="rtl" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+    // متغیرهای فونت روی html تعریف می‌شوند چون --font-sans در @theme روی :root ساخته می‌شود
+    <html
+      lang="fa"
+      dir="rtl"
+      data-scroll-behavior="smooth"
+      className={`${yekanBakh.variable} ${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased min-h-screen flex flex-col">
         <ThemeProvider>
           <UserProvider>  {/* ✅ اینجا UserProvider را قرار دهید */}
             <ToastProvider>
