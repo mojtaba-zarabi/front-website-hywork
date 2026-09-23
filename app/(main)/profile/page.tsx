@@ -252,9 +252,11 @@ function ProfilePageContent() {
   };
 
   // ✅ اصلاح: تشخیص اینکه آیا کاربر صاحب پروفایل است
+  // idهای users.json و کاربر لاگین‌شده از یک منبع نیستند و ممکن است تکراری باشند،
+  // پس فقط username مقایسه می‌شود
   const isOwnProfile = () => {
-    if (!currentUser || !profileUser) return false;
-    return currentUser.id === profileUser.id || currentUser.username === profileUser.username;
+    if (!currentUser?.username || !profileUser?.username) return false;
+    return currentUser.username.toLowerCase() === profileUser.username.toLowerCase();
   };
 
   const goBack = () => {
