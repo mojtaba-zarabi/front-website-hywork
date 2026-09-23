@@ -692,7 +692,7 @@ export default function UsersManagementPage() {
 
   const formatPrice = (price: number) => {
     if (!price && price !== 0) return '۰ تومان';
-    return toPersianNumber(price.toLocaleString()) + ' تومان';
+    return toPersianNumber(price.toLocaleString('en-US')) + ' تومان';
   };
 
   const getRoleBadge = (role: string) => {
@@ -965,7 +965,7 @@ export default function UsersManagementPage() {
               <th className="text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium cursor-pointer" onClick={() => handleSort('ordersCount')}>
                 سفارشات <SortIcon field="ordersCount" sortField={sortField} sortDirection={sortDirection} />
               </th>
-              <th className="text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium">عملیات</th>
+              <th className="sticky end-0 z-1 bg-(--color-bg-card) text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium">عملیات</th>
             </tr>
           </thead>
           <tbody>
@@ -1003,7 +1003,7 @@ export default function UsersManagementPage() {
                   <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">{user.joinDate}</td>
                   <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">{toPersianNumber(user.postsCount)}</td>
                   <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">{toPersianNumber(user.ordersCount)}</td>
-                  <td className="p-3 border-b border-(--color-border-light)">
+                  <td className="sticky end-0 z-1 bg-(--color-bg-card) p-3 border-b border-(--color-border-light)">
                     <MoreMenu
                       onView={() => handleViewUser(user)}
                       onEdit={() => handleEditUser(user)}

@@ -314,7 +314,7 @@ export default function HomePage() {
   // ============================================================
   const router = useRouter();
   const { success, error: toastError } = useToast();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // ============================================================
   // 5.2 وضعیت‌های کامپوننت
@@ -361,6 +361,9 @@ export default function HomePage() {
         if (isMounted) {
           if (allPosts && Array.isArray(allPosts) && allPosts.length > 0) {
             setPosts(allPosts);
+            // بازه قیمت پیش‌فرض باید همه محصولات را شامل شود
+            const prices = allPosts.map((p) => p.price);
+            setFilters((prev) => ({ ...prev, priceRange: [Math.min(...prices), Math.max(...prices)] }));
             console.log('✅ پست‌ها با موفقیت بارگذاری شدند');
           } else {
             console.warn('⚠️ هیچ پستی یافت نشد');

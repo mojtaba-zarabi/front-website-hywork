@@ -318,7 +318,7 @@ export default function CreatePostPage() {
   // ============================================
   const { user, setUser } = useContext(UserContext);
   const { success, error, warning, info } = useToast();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
   
   // تبدیل user به نوع توسعه یافته با id از نوع number
   const currentUser = user as ExtendedUser | null;

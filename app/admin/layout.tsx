@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 interface AdminLayoutProps {
@@ -8,29 +9,28 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const pathname = usePathname();
+  // فقط زیر lg (موبایل و تبلت) استفاده می‌شود؛ در دسکتاپ سایدبار همیشه باز است
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // بعد از رفتن به صفحه دیگر، کشوی سایدبار بسته شود
   useEffect(() => {
-    const applyByViewport = () => {
-      setIsSidebarOpen(window.innerWidth > 768);
-    };
-    applyByViewport();
-    window.addEventListener('resize', applyByViewport);
-    return () => window.removeEventListener('resize', applyByViewport);
-  }, []);
+    setIsSidebarOpen(false);
+  }, [pathname]);
+
+  // صفحه ورود نباید منوی پنل را نشان دهد
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-bg-primary">
       <div className="flex flex-1 relative">
-        <AdminSidebar 
+        <AdminSidebar
           isOpen={isSidebarOpen}
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         />
-        <div 
-          className={`flex-1 overflow-y-auto p-6 px-8 bg-bg-primary min-h-[calc(100vh-70px)] transition-all duration-300 ${
-            isSidebarOpen ? 'ms-65' : 'ms-0'
-          }`}
-        >
+        <div className="flex-1 min-w-0 overflow-y-auto px-4 pt-16 pb-6 sm:px-6 lg:pt-6 lg:px-8 lg:ms-65 bg-bg-primary min-h-[calc(100vh-70px)]">
           {children}
         </div>
       </div>
