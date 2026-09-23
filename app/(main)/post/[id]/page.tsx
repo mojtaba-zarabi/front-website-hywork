@@ -94,7 +94,7 @@ const useMobileDetect = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
     const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     
     setIsMobile(mediaQuery.matches);

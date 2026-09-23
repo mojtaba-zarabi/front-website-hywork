@@ -32,7 +32,7 @@ import { useToast } from '@/components/NotificationToast';
  * - سازگار با SSR و Hydration
  * - عملکرد بهینه
  * 
- * @param query - کوئری مدیا (مثال: '(max-width: 768px)')
+ * @param query - کوئری مدیا (مثال: '(max-width: 767px)')
  * @returns boolean - آیا کوئری مطابقت دارد یا خیر
  */
 const useMediaQuery = (query: string): boolean => {
@@ -288,7 +288,7 @@ const OrderCard = ({ order }: { order: Order }) => {
         </h4>
         <p className="text-xs text-text-muted mb-1">{order.date}</p>
         <p className="text-sm font-semibold text-accent-color">
-          {toPersianNumber(order.price.toLocaleString())} تومان
+          {toPersianNumber(order.price.toLocaleString('en-US'))} تومان
         </p>
       </div>
       <div className="text-center sm:w-full">
@@ -322,7 +322,7 @@ export default function DashboardPage() {
   // هوک‌های ری‌اکت
   // ============================================
   const { success } = useToast();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // ============================================
   // وضعیت‌های کامپوننت
@@ -612,7 +612,7 @@ export default function DashboardPage() {
           <div className="text-center mb-6">
             <p className="text-sm opacity-90 mb-2">موجودی فعلی</p>
             <p className="text-3xl font-bold sm:text-2xl">
-              {toPersianNumber(userData.balance.toLocaleString())} تومان
+              {toPersianNumber(userData.balance.toLocaleString('en-US'))} تومان
             </p>
           </div>
           <div className="flex gap-3 justify-center flex-wrap sm:flex-col">

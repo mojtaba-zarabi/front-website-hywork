@@ -17,15 +17,15 @@ export default function AdminSidebar({ isOpen = true, onToggle }: AdminSidebarPr
     { path: '/admin/usersmanagement', label: 'کاربران', icon: '👥' },
     { path: '/admin/orders', label: 'سفارشات', icon: '🛒' },
     { path: '/admin/chats', label: 'چت‌ها', icon: '💬' },
-    { path: '/admin/settings', label: 'تنظیمات', icon: '⚙️' },
   ];
 
   return (
     <>
-      {/* سایدبار */}
-      <aside 
+      {/* سایدبار: زیر lg کشویی است و در دسکتاپ همیشه دیده می‌شود.
+          در RTL سایدبار سمت راست است، پس برای پنهان شدن باید به راست برود */}
+      <aside
         className={`fixed start-0 top-0 h-full w-[260px] bg-(--color-bg-secondary) border-e border-(--color-border-color) overflow-y-auto z-50 transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? '' : 'max-lg:rtl:translate-x-full max-lg:ltr:-translate-x-full'
         }`}
       >
         <div className="p-4 border-b border-(--color-border-color)">
@@ -58,15 +58,16 @@ export default function AdminSidebar({ isOpen = true, onToggle }: AdminSidebarPr
       {/* دکمه همبرگر */}
       <button
         onClick={onToggle}
-        className="fixed top-4 right-4 z-[60] md:hidden p-2 bg-(--color-bg-card) rounded-lg border border-(--color-border-color) text-(--color-text-primary)"
+        aria-label={isOpen ? 'بستن منو' : 'باز کردن منو'}
+        className="fixed top-3 end-4 z-[60] lg:hidden w-10 h-10 flex items-center justify-center bg-(--color-bg-card) rounded-lg border border-(--color-border-color) text-(--color-text-primary)"
       >
         {isOpen ? '✕' : '☰'}
       </button>
 
       {/* overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onToggle}
         />
       )}

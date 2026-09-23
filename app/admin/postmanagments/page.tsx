@@ -895,7 +895,7 @@ export default function PostsManagementPage() {
               <th className="text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium cursor-pointer" onClick={() => handleSort('stock')}>
                 موجودی <SortIcon field="stock" sortField={sortField} sortDirection={sortDirection} />
               </th>
-              <th className="text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium">عملیات</th>
+              <th className="sticky end-0 z-1 bg-(--color-bg-card) text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium">عملیات</th>
             </tr>
           </thead>
           <tbody>
@@ -928,7 +928,7 @@ export default function PostsManagementPage() {
                   </td>
                   <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">{post.createdAt}</td>
                   <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">{toPersianNumber(post.stock)}</td>
-                  <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">
+                  <td className="sticky end-0 z-1 bg-(--color-bg-card) p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">
                     <MoreMenu
                       post={post}
                       onEdit={handleEditPost}

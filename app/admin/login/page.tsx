@@ -29,8 +29,8 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white rounded-3xl p-10 w-full max-w-400 shadow-[0_20px_35px_rgba(0,0,0,0.1)]">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-10 w-full max-w-[400px] shadow-[0_20px_35px_rgba(0,0,0,0.1)]">
         <h2 className="text-center mb-8 text-[#1e293b] text-2xl font-bold">
           ورود به پنل مدیریت
         </h2>

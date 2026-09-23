@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   LineChart, Line,
@@ -99,6 +99,16 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [timeRange, setTimeRange] = useState<'weekly' | 'monthly'>('monthly');
+  // در صفحه باریک برچسب‌های نمودار دایره‌ای روی هم می‌افتند؛ راهنمای زیر نمودار کافی است
+  const [isNarrow, setIsNarrow] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsNarrow(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   // ==================== داده‌های آماری ====================
   const stats = useMemo(() => ({
@@ -169,7 +179,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   const formatPrice = useCallback((price: number) => {
-    return toPersianNumber(price.toLocaleString()) + ' تومان';
+    return toPersianNumber(price.toLocaleString('en-US')) + ' تومان';
   }, [toPersianNumber]);
 
   const getStatusColor = useCallback((status: string) => {
@@ -377,7 +387,7 @@ export default function AdminDashboardPage() {
                   cx="50%" 
                   cy="50%" 
                   outerRadius={80} 
-                  label={({ name, percent = 0 }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={isNarrow ? false : ({ name, percent = 0 }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

@@ -270,7 +270,7 @@ export default function CartPage() {
   const { success, error } = useToast();
   
   // استفاده از useMediaQuery با استاندارد React 19
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // ============================================
   // وضعیت‌های کامپوننت

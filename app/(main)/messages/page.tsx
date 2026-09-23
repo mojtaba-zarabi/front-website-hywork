@@ -450,7 +450,7 @@ export default function MessagesPage() {
   // ============================================================
   const router = useRouter();
   const { success, error, info } = useToast();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // ============================================================
   // 8.2 وضعیت‌های کامپوننت

@@ -115,7 +115,7 @@ function ProfilePageContent() {
   ]);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -324,8 +324,8 @@ function ProfilePageContent() {
   }
 
   const persianPostsCount = toPersianNumber(posts.length);
-  const persianFollowers = toPersianNumber((profileUser.followersCount || 0).toLocaleString());
-  const persianFollowing = toPersianNumber((profileUser.followingCount || 0).toLocaleString());
+  const persianFollowers = toPersianNumber((profileUser.followersCount || 0).toLocaleString('en-US'));
+  const persianFollowing = toPersianNumber((profileUser.followingCount || 0).toLocaleString('en-US'));
 
   const isOwn = isOwnProfile();
 
@@ -492,7 +492,7 @@ function ProfilePageContent() {
           position: relative;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-content-area {
             margin-right: 0;
             margin-bottom: 70px;
@@ -508,7 +508,7 @@ function ProfilePageContent() {
           position: relative;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-container {
             width: 800px;
             max-width: 100%;
@@ -517,7 +517,7 @@ function ProfilePageContent() {
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-container {
             max-width: 100%;
             padding: 0;
@@ -529,7 +529,7 @@ function ProfilePageContent() {
           width: 100%;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-header {
             gap: 40px;
             margin-bottom: 40px;
@@ -537,7 +537,7 @@ function ProfilePageContent() {
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-header {
             gap: 12px;
             margin-bottom: 16px;
@@ -562,7 +562,7 @@ function ProfilePageContent() {
           width: 100%;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-stats {
             gap: 40px;
           }
@@ -580,7 +580,7 @@ function ProfilePageContent() {
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-stats {
             gap: 8px;
             justify-content: space-between;
@@ -607,13 +607,13 @@ function ProfilePageContent() {
           color: var(--color-text-primary);
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-bio {
             font-size: 14px;
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-bio {
             font-size: 11px;
           }
@@ -644,7 +644,7 @@ function ProfilePageContent() {
           transition: all 0.2s;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-edit-btn,
           .profile-follow-btn,
           .profile-following-btn {
@@ -700,14 +700,14 @@ function ProfilePageContent() {
           padding-bottom: 8px;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-highlights-wrapper {
             padding: 20px 0 12px 0;
             margin: 0;
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-highlights-wrapper {
             padding: 12px 0 6px 0;
           }
@@ -735,7 +735,7 @@ function ProfilePageContent() {
           border-radius: 10px;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-highlights {
             gap: 12px;
             padding: 0 12px 4px 12px;
@@ -775,7 +775,7 @@ function ProfilePageContent() {
           cursor: pointer;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-highlight-circle,
           .profile-add-highlight-circle {
             width: 60px;
@@ -788,7 +788,7 @@ function ProfilePageContent() {
           color: var(--color-text-secondary);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-highlight-title {
             font-size: 10px;
           }
@@ -800,13 +800,13 @@ function ProfilePageContent() {
           width: 100%;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-tabs {
             margin-top: 20px;
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-tabs {
             margin-top: 12px;
           }
@@ -836,7 +836,7 @@ function ProfilePageContent() {
           background-color: var(--color-text-primary);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-active-tab {
             font-size: 12px;
             padding: 8px 0;
@@ -853,7 +853,7 @@ function ProfilePageContent() {
           overflow-x: hidden;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 768px) {
           .profile-products-grid {
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
@@ -861,7 +861,7 @@ function ProfilePageContent() {
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
           .profile-products-grid {
             grid-template-columns: repeat(3, 1fr);
             gap: 1px;

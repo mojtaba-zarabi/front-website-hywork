@@ -407,7 +407,7 @@ const HorizontalProductCard: React.FC<{
           alt={post.title}
           fill
           className="object-cover"
-          sizes="(max-width: 768px) 90px, 90px"
+          sizes="(max-width: 767px) 90px, 90px"
         />
       </div>
       
@@ -700,7 +700,7 @@ function FullMapPageContent() {
   // ============================================================
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // ============================================================
   // 11.2 وضعیت‌های کامپوننت
@@ -1109,6 +1109,10 @@ function FullMapPageContent() {
         }
         .leaflet-container {
           font-family: var(--font-sans);
+        }
+        /* کنترل‌های بالای نقشه (زوم) زیر هدر جستجو پنهان نشوند */
+        .leaflet-top {
+          top: 64px;
         }
         .custom-marker {
           transition: transform 0.2s ease;

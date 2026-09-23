@@ -799,7 +799,7 @@ export default function OrdersManagement() {
               <th className="text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium cursor-pointer" onClick={() => handleSort('createdAt')}>
                 تاریخ ثبت <SortIcon field="createdAt" sortField={sortField} sortDirection={sortDirection} />
               </th>
-              <th className="text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium">عملیات</th>
+              <th className="sticky end-0 z-1 bg-(--color-bg-card) text-right p-3 border-b border-(--color-border-color) text-(--color-text-secondary) text-[12px] font-medium">عملیات</th>
             </tr>
           </thead>
           <tbody>
@@ -832,7 +832,7 @@ export default function OrdersManagement() {
                     </span>
                   </td>
                   <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">{order.createdAt}</td>
-                  <td className="p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">
+                  <td className="sticky end-0 z-1 bg-(--color-bg-card) p-3 text-[12px] text-(--color-text-primary) border-b border-(--color-border-light)">
                     <OrderMoreMenu
                       order={order}
                       onViewDetails={handleViewDetails}
