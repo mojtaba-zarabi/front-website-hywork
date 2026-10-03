@@ -75,15 +75,17 @@ export default function VerifyForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col min-h-[calc(100vh-2.25rem)] pt-32.5">
-      <h1 className="m-0 text-[22px] font-semibold text-white text-center leading-6.75">کد تأیید</h1>
-      <p className="mt-3 mb-11 text-sm text-text-secondary text-center">
-        کد ارسال شده به{' '}
-        <span dir="ltr" className="text-white">
-          {formatIdentifier(identifier)}
-        </span>{' '}
-        را وارد کنید
-      </p>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-text-primary">تایید کد</h1>
+        <p className="mt-2 text-sm text-text-secondary">
+          کد ۶ رقمی ارسال شده به{' '}
+          <span dir="ltr" className="font-medium text-text-primary">
+            {formatIdentifier(identifier)}
+          </span>{' '}
+          را وارد کنید
+        </p>
+      </div>
 
       <OtpInput
         ref={otpRef}
@@ -96,29 +98,55 @@ export default function VerifyForm({
       />
 
       {error && (
-        <p className="mt-3 text-center text-sm text-danger">
+        <p className="text-center text-sm text-red-500">
           کد وارد شده صحیح نیست. لطفاً دوباره تلاش کنید.
         </p>
       )}
 
       <button
-        type="button"
-        onClick={handleResendClick}
-        disabled={!canResend || isResending}
-        className={`mt-6 mx-auto text-sm transition-colors ${
-          canResend && !isResending ? 'text-white underline cursor-pointer' : 'text-text-secondary cursor-not-allowed'
-        }`}
-      >
-        {isResending ? 'در حال ارسال...' : canResend ? 'ارسال مجدد کد' : `ارسال مجدد کد پس از ${timer} ثانیه`}
-      </button>
-
-      <button
         type="submit"
         disabled={isLoading || otp.some(d => d === '')}
-        className="mt-auto w-full h-18.75 rounded-[20px] bg-white text-black text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+        className="w-full rounded-lg bg-primary px-4 py-3 text-white font-medium hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {isLoading ? 'در حال بررسی...' : 'ادامه'}
+        {isLoading ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            در حال بررسی...
+          </span>
+        ) : (
+          'تایید کد'
+        )}
       </button>
+
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={handleResendClick}
+          disabled={!canResend || isResending}
+          className={`text-sm transition-colors ${
+            canResend && !isResending
+              ? 'text-primary hover:text-primary-dark cursor-pointer'
+              : 'text-text-secondary cursor-not-allowed'
+          }`}
+        >
+          {isResending ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              در حال ارسال...
+            </span>
+          ) : canResend ? (
+            'ارسال مجدد کد'
+          ) : (
+            `ارسال مجدد کد پس از ${timer} ثانیه`
+          )}
+        </button>
+      </div>
     </form>
   );
 }

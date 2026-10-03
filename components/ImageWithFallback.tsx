@@ -27,15 +27,8 @@ export default function ImageWithFallback({
     }
   };
 
-  // اگر تصویر قبل از هیدریت شدن خطا داده باشد، onError دیگر صدا زده نمی‌شود؛
-  // پس هنگام اتصال به DOM وضعیت بارگذاری را خودمان بررسی می‌کنیم
-  const checkLoaded = (img: HTMLImageElement | null) => {
-    if (img && img.complete && img.naturalWidth === 0) handleError();
-  };
-
   return (
     <img
-      ref={checkLoaded}
       src={imgSrc}
       alt={alt}
       className={className}

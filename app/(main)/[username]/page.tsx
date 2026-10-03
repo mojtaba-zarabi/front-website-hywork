@@ -6,10 +6,6 @@ import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from '@/components/NotificationToast';
 import { fetchUserByUsername } from '@/services/postService';
-import AppShell from '@/components/AppShell';
-import ProfileHeader from '@/components/ProfileHeader';
-import { Button, Chip, SpecList } from '@/components/FormControls';
-import { toPersianNumber } from '@/utils/numberUtils';
 
 // ============================================
 // ثابت‌های برنامه
@@ -210,12 +206,10 @@ function formatDate(dateString?: string): string {
  */
 function LoadingProfile() {
   return (
-    <AppShell suppressActiveProfile>
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-placeholder border-t-accent-color rounded-full animate-spin" />
-        <p className="mt-4 text-text-secondary">در حال بارگذاری پروفایل...</p>
-      </div>
-    </AppShell>
+    <div className="flex flex-col items-center justify-center min-h-400">
+      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <p className="mt-4 text-text-secondary">در حال بارگذاری پروفایل...</p>
+    </div>
   );
 }
 
@@ -224,131 +218,247 @@ function LoadingProfile() {
  */
 function ErrorProfile({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <AppShell suppressActiveProfile>
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-        <Image src="/images/illustrations/empty-posts.png" alt="" width={200} height={197} />
-        <h2 className="m-0 mt-2 text-lg font-medium text-text-primary">خطا در بارگذاری پروفایل</h2>
-        <p className="m-0 mt-1 mb-6 text-sm text-text-secondary">{message}</p>
-        <Button size="md" onClick={onRetry}>تلاش مجدد</Button>
-      </div>
-    </AppShell>
+    <div className="flex flex-col items-center justify-center min-h-400">
+      <div className="text-6xl mb-4">😕</div>
+      <h2 className="text-xl font-bold text-text-primary mb-2">خطا در بارگذاری پروفایل</h2>
+      <p className="text-text-secondary mb-6">{message}</p>
+      <button
+        onClick={onRetry}
+        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+      >
+        تلاش مجدد
+      </button>
+    </div>
   );
 }
 
 /**
- * کامپوننت نمایش پروفایل - سربرگ فیگما و بخش‌های اطلاعات با فهرست کلید/مقدار و چیپ‌ها
+ * کامپوننت نمایش پروفایل
  */
 function ProfileDisplay({ profile }: { profile: UserProfile }) {
   const fullName = getFullName(profile.firstName, profile.lastName);
   const joinedDate = formatDate(profile.joinedAt);
-  const fa = (n?: number) => toPersianNumber((n || 0).toLocaleString('en-US'));
-
-  const info = [
-    profile.city && { label: 'شهر', value: profile.city },
-    profile.website && {
-      label: 'وب‌سایت',
-      value: (
-        <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-text-primary underline" dir="ltr">
-          {profile.website}
-        </a>
-      ),
-    },
-    profile.email && { label: 'ایمیل', value: <span dir="ltr">{profile.email}</span> },
-    joinedDate && { label: 'تاریخ عضویت', value: joinedDate },
-  ].filter(Boolean) as { label: string; value: React.ReactNode }[];
-
-  const socials = profile.socialLinks
-    ? (Object.entries(profile.socialLinks) as [string, string | undefined][]).filter(([, url]) => url)
-    : [];
 
   return (
-    <>
-      <ProfileHeader
-        avatar={profile.avatar}
-        name={fullName || profile.username}
-        subtitle={`\u2066@${profile.username}\u2069`}
-        bio={profile.bio}
-        stats={[
-          { label: 'پست', value: fa(profile.postsCount) },
-          { label: 'دنبال‌کننده', value: fa(profile.followersCount) },
-          { label: 'دنبال‌شونده', value: fa(profile.followingCount) },
-        ]}
-        actions={
-          profile.isVerified && (
-            <span className="inline-flex items-center gap-1 h-6 px-3 rounded-full bg-success/15 text-success text-xs">تأیید شده</span>
-          )
-        }
-      />
+    <div className="max-w-4xl mx-auto p-6">
+      {/* هدر پروفایل */}
+      <div className="bg-bg-secondary rounded-xl shadow-md p-6 mb-6">
+        <div className="flex items-start gap-6">
+          {/* آواتار - استفاده از next/image */}
+          <div className="shrink-0">
+            {profile.avatar ? (
+              <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-primary">
+                <Image
+                  src={profile.avatar}
+                  alt={fullName || profile.username}
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                  priority
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-3xl text-primary">
+                {fullName ? fullName.charAt(0) : profile.username.charAt(0)}
+              </div>
+            )}
+          </div>
 
-      <div className="px-4 pb-10">
-        {info.length > 0 && <SpecList title="اطلاعات" items={info} className="mt-10" />}
+          {/* اطلاعات اصلی */}
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-text-primary">
+              {fullName || profile.username}
+            </h1>
+            <p className="text-text-secondary">@{profile.username}</p>
+            
+            {profile.bio && (
+              <p className="mt-2 text-text-primary">{profile.bio}</p>
+            )}
 
+            {/* آمار */}
+            <div className="flex gap-6 mt-4">
+              <div>
+                <span className="font-bold text-text-primary">{profile.postsCount || 0}</span>
+                <span className="text-text-secondary mr-1">پست</span>
+              </div>
+              <div>
+                <span className="font-bold text-text-primary">{profile.followersCount || 0}</span>
+                <span className="text-text-secondary mr-1">دنبال‌کننده</span>
+              </div>
+              <div>
+                <span className="font-bold text-text-primary">{profile.followingCount || 0}</span>
+                <span className="text-text-secondary mr-1">دنبال‌شونده</span>
+              </div>
+            </div>
+
+            {/* تاریخ عضویت */}
+            {joinedDate && (
+              <p className="text-sm text-text-secondary mt-2">
+                عضو از {joinedDate}
+              </p>
+            )}
+
+            {/* وضعیت تایید */}
+            {profile.isVerified && (
+              <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                <span>✅</span>
+                تایید شده
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* اطلاعات تکمیلی */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* شهر */}
+        {profile.city && (
+          <div className="bg-bg-secondary rounded-xl shadow-md p-4">
+            <h3 className="font-semibold text-text-primary mb-1">📍 شهر</h3>
+            <p className="text-text-secondary">{profile.city}</p>
+          </div>
+        )}
+
+        {/* وبسایت */}
+        {profile.website && (
+          <div className="bg-bg-secondary rounded-xl shadow-md p-4">
+            <h3 className="font-semibold text-text-primary mb-1">🌐 وبسایت</h3>
+            <a
+              href={profile.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              {profile.website}
+            </a>
+          </div>
+        )}
+
+        {/* ایمیل */}
+        {profile.email && (
+          <div className="bg-bg-secondary rounded-xl shadow-md p-4">
+            <h3 className="font-semibold text-text-primary mb-1">✉️ ایمیل</h3>
+            <p className="text-text-secondary">{profile.email}</p>
+          </div>
+        )}
+
+        {/* مهارت‌ها */}
         {profile.skills && profile.skills.length > 0 && (
-          <section className="mt-10">
-            <h2 className="m-0 mb-4 text-lg font-medium text-right">مهارت‌ها</h2>
+          <div className="bg-bg-secondary rounded-xl shadow-md p-4">
+            <h3 className="font-semibold text-text-primary mb-2">🛠️ مهارت‌ها</h3>
             <div className="flex flex-wrap gap-2">
               {profile.skills.map((skill, index) => (
-                <Chip key={index} active={index === 0}>{skill}</Chip>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {profile.experiences && profile.experiences.length > 0 && (
-          <section className="mt-10">
-            <h2 className="m-0 mb-4 text-lg font-medium text-right">تجربیات کاری</h2>
-            <ul className="list-none m-0 p-0">
-              {profile.experiences.map((exp) => (
-                <li key={exp.id} className="py-3 border-b-[0.5px] border-border-color last:border-0">
-                  <h3 className="m-0 text-base font-semibold text-text-primary">{exp.title}</h3>
-                  <p className="m-0 text-sm text-text-primary">{exp.company}</p>
-                  <p className="m-0 text-xs text-text-secondary">
-                    {formatDate(exp.startDate)} - {exp.current ? 'اکنون' : formatDate(exp.endDate)}
-                  </p>
-                  {exp.description && <p className="m-0 mt-2 text-xs text-text-primary">{exp.description}</p>}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {profile.education && profile.education.length > 0 && (
-          <section className="mt-10">
-            <h2 className="m-0 mb-4 text-lg font-medium text-right">تحصیلات</h2>
-            <ul className="list-none m-0 p-0">
-              {profile.education.map((edu) => (
-                <li key={edu.id} className="py-3 border-b-[0.5px] border-border-color last:border-0">
-                  <h3 className="m-0 text-base font-semibold text-text-primary">{edu.degree}</h3>
-                  <p className="m-0 text-sm text-text-primary">{edu.field} · {edu.institution}</p>
-                  <p className="m-0 text-xs text-text-secondary">
-                    {formatDate(edu.startDate)} - {edu.current ? 'اکنون' : formatDate(edu.endDate)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {socials.length > 0 && (
-          <section className="mt-10">
-            <h2 className="m-0 mb-4 text-lg font-medium text-right">شبکه‌های اجتماعی</h2>
-            <div className="flex flex-wrap gap-2">
-              {socials.map(([name, url]) => (
-                <a
-                  key={name}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-8 px-3.5 rounded-full border border-border-strong text-sm text-text-primary leading-8 capitalize hover:text-text-primary"
+                <span
+                  key={index}
+                  className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                 >
-                  {name}
-                </a>
+                  {skill}
+                </span>
               ))}
             </div>
-          </section>
+          </div>
         )}
       </div>
-    </>
+
+      {/* تجربیات کاری */}
+      {profile.experiences && profile.experiences.length > 0 && (
+        <div className="mt-6 bg-bg-secondary rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">💼 تجربیات کاری</h2>
+          <div className="space-y-4">
+            {profile.experiences.map((exp) => (
+              <div key={exp.id} className="border-b border-bg-border last:border-0 pb-4 last:pb-0">
+                <h3 className="font-semibold text-text-primary">{exp.title}</h3>
+                <p className="text-text-secondary">{exp.company}</p>
+                <p className="text-sm text-text-secondary">
+                  {formatDate(exp.startDate)} - {exp.current ? 'اکنون' : formatDate(exp.endDate)}
+                </p>
+                {exp.description && (
+                  <p className="mt-2 text-text-primary">{exp.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* تحصیلات */}
+      {profile.education && profile.education.length > 0 && (
+        <div className="mt-6 bg-bg-secondary rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">🎓 تحصیلات</h2>
+          <div className="space-y-4">
+            {profile.education.map((edu) => (
+              <div key={edu.id} className="border-b border-bg-border last:border-0 pb-4 last:pb-0">
+                <h3 className="font-semibold text-text-primary">{edu.degree}</h3>
+                <p className="text-text-secondary">{edu.field}</p>
+                <p className="text-text-secondary">{edu.institution}</p>
+                <p className="text-sm text-text-secondary">
+                  {formatDate(edu.startDate)} - {edu.current ? 'اکنون' : formatDate(edu.endDate)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* لینک‌های اجتماعی */}
+      {profile.socialLinks && Object.values(profile.socialLinks).some(link => link) && (
+        <div className="mt-6 bg-bg-secondary rounded-xl shadow-md p-6">
+          <h2 className="text-xl font-bold text-text-primary mb-4">🔗 شبکه‌های اجتماعی</h2>
+          <div className="flex flex-wrap gap-4">
+            {profile.socialLinks.linkedin && (
+              <a
+                href={profile.socialLinks.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                LinkedIn
+              </a>
+            )}
+            {profile.socialLinks.github && (
+              <a
+                href={profile.socialLinks.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-700 hover:underline"
+              >
+                GitHub
+              </a>
+            )}
+            {profile.socialLinks.twitter && (
+              <a
+                href={profile.socialLinks.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                Twitter
+              </a>
+            )}
+            {profile.socialLinks.instagram && (
+              <a
+                href={profile.socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pink-600 hover:underline"
+              >
+                Instagram
+              </a>
+            )}
+            {profile.socialLinks.telegram && (
+              <a
+                href={profile.socialLinks.telegram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                Telegram
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -586,9 +696,13 @@ export default function ProfilePage() {
 
   // نمایش پروفایل
   return (
-    <AppShell suppressActiveProfile>
+    <main 
+      className="min-h-screen bg-bg-primary py-8"
+      role="main"
+      aria-label="صفحه پروفایل"
+    >
       <ProfileDisplay profile={profile} />
-    </AppShell>
+    </main>
   );
 }
 

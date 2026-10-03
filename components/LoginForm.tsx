@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import Image from 'next/image';
 
 // ==================== TYPES ====================
 interface LoginFormData {
@@ -43,59 +42,59 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
     }
   };
 
-  // ورود با گوگل در طراحی هست ولی هنوز در بک‌اند پیاده نشده
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col min-h-[calc(100vh-2.25rem)] pt-30" dir="rtl" noValidate>
-      <h1 className="m-0 text-[22px] font-semibold text-white text-center leading-6.75">ورود</h1>
+    <div className="w-full max-w-md mx-auto">
+      <form 
+        onSubmit={handleSubmit} 
+        className="bg-bg-card shadow-[0_4px_20px_var(--color-shadow)] rounded-2xl px-6 sm:px-8 pt-6 pb-8 border border-border-color"
+        dir="rtl"
+      >
+        <h2 className="text-2xl font-bold text-center mb-6 text-text-primary">
+          ورود به حساب کاربری
+        </h2>
+        
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-xl mb-4 text-sm">
+            {error}
+          </div>
+        )}
 
-      <label className="block mt-61.5">
-        <span className="sr-only">شماره موبایل یا ایمیل</span>
-        <span
-          className={`flex items-center gap-3 h-14 px-3.5 rounded-xl border-2 ${
-            error ? 'border-danger' : 'border-white'
-          } focus-within:border-[3px]`}
-        >
+        <div className="mb-6">
+          <label className="block text-text-secondary text-sm font-medium mb-2">
+            شماره تلفن یا ایمیل
+          </label>
           <input
             type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="موبایل یا ایمیل"
+            className="w-full px-4 py-3 border border-border-color rounded-xl text-sm outline-none transition-all bg-bg-primary text-text-primary font-sans focus:border-accent-color focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
+            placeholder="09123456789 یا example@email.com"
             disabled={isLoading}
-            autoComplete="tel"
-            className="flex-1 min-w-0 h-full bg-transparent border-none outline-none text-base font-medium text-white placeholder:text-[#b2b2b2] text-right disabled:opacity-60"
+            dir="ltr"
           />
-          <span dir="ltr" className="flex items-center gap-2.5 shrink-0 text-base font-medium text-white">
-            <span aria-hidden className="block w-6 h-4 overflow-hidden rounded-[1px]">
-              <span className="block h-1/3 bg-[#6da544]" />
-              <span className="block h-1/3 bg-white" />
-              <span className="block h-1/3 bg-[#d80027]" />
-            </span>
-            +98
-          </span>
-        </span>
-      </label>
-      {error && <p className="mt-2 text-sm text-danger text-right">{error}</p>}
+          <p className="text-xs text-text-muted mt-1.5 text-right">
+            کد تایید ۶ رقمی به شماره یا ایمیل شما ارسال خواهد شد
+          </p>
+        </div>
 
-      <div className="mt-55 flex flex-col items-center gap-2.5">
         <button
-          type="button"
-          disabled
-          title="به‌زودی"
-          className="w-15.5 h-15.5 rounded-[11px] border border-white/40 flex items-center justify-center disabled:cursor-not-allowed"
-          aria-label="ورود با گوگل (به‌زودی)"
+          type="submit"
+          disabled={isLoading || !identifier.trim()}
+          className="w-full bg-accent-color text-white border-none px-4 py-3 rounded-xl text-sm sm:text-base font-semibold cursor-pointer transition-all hover:bg-accent-hover hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
         >
-          <Image src="/images/brand/google.png" alt="" width={34} height={34} />
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              در حال ارسال کد...
+            </span>
+          ) : (
+            'دریافت کد تایید'
+          )}
         </button>
-        <span className="text-sm text-placeholder">ورود با گوگل</span>
-      </div>
-
-      <button
-        type="submit"
-        disabled={isLoading || !identifier.trim()}
-        className="mt-auto w-full h-18.75 rounded-[20px] bg-white text-black text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-      >
-        {isLoading ? 'در حال ارسال کد...' : 'تأیید'}
-      </button>
-    </form>
+      </form>
+    </div>
   );
 }

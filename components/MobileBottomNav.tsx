@@ -1,85 +1,101 @@
 'use client';
 
-import { useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { UserContext } from '@/contexts/UserContext';
-import { HomeIcon, CartIcon, PlusIcon, SearchIcon, UserIcon } from '@/components/icons';
+import { useTheme } from '@/contexts/ThemeContext';
+
+// ==================== آیکون‌ها (SVG Inline) ====================
+const ProfileIcon = ({ className, stroke, fill }: { className?: string; stroke?: string; fill?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={fill || 'none'} stroke={stroke || 'currentColor'} strokeWidth="2">
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const SearchIcon = ({ className, stroke, fill }: { className?: string; stroke?: string; fill?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={fill || 'none'} stroke={stroke || 'currentColor'} strokeWidth="2">
+    <circle cx="11" cy="11" r="8" />
+    <path d="M21 21l-4.35-4.35" />
+  </svg>
+);
+
+const CreatePostIcon = ({ className, stroke, fill }: { className?: string; stroke?: string; fill?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={fill || 'none'} stroke={stroke || 'currentColor'} strokeWidth="2">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 8v8M8 12h8" />
+  </svg>
+);
+
+const CartIcon = ({ className, stroke, fill }: { className?: string; stroke?: string; fill?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={fill || 'none'} stroke={stroke || 'currentColor'} strokeWidth="2">
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+  </svg>
+);
+
+const MessagesIcon = ({ className, stroke, fill }: { className?: string; stroke?: string; fill?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={fill || 'none'} stroke={stroke || 'currentColor'} strokeWidth="2">
+    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+  </svg>
+);
 
 // ==================== کامپوننت اصلی ====================
-// نوار پایین فیگما: ۵۶ پیکسل، سفید، خط بالای مشکی، فقط آیکون (بدون برچسب)
+interface MenuItem {
+  name: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string; stroke?: string; fill?: string }>;
+}
 
 interface MobileBottomNavProps {
   suppressActiveProfile?: boolean;
-  cartCount?: number;
 }
-
-// رنگ حلقه‌ی آواتار بر اساس وضعیت کاربر
-export const statusRingColor = (status?: string) => {
-  switch (status) {
-    case 'ready':
-    case 'active':
-      return 'var(--color-online)';
-    case 'busy':
-      return 'var(--color-danger)';
-    default:
-      return 'var(--color-text-muted)';
-  }
-};
 
 export default function MobileBottomNav({
   suppressActiveProfile = false,
-  cartCount = 0,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
-  const { user } = useContext(UserContext);
+  const { theme } = useTheme();
 
-  const isActive = (path: string) => pathname === path;
-  const profileActive = !suppressActiveProfile && isActive('/profile');
+  const menuItems: MenuItem[] = [
+    { name: 'پروفایل', path: '/profile', icon: ProfileIcon },
+    { name: 'جستجو', path: '/search', icon: SearchIcon },
+    { name: 'ساخت پست', path: '/create-post', icon: CreatePostIcon },
+    { name: 'سبد خرید', path: '/cart', icon: CartIcon },
+    { name: 'پیام‌ها', path: '/messages', icon: MessagesIcon },
+  ];
 
-  const iconLink = (path: string, label: string, icon: React.ReactNode, badge?: number) => (
-    <Link
-      href={path}
-      aria-label={label}
-      aria-current={isActive(path) ? 'page' : undefined}
-      className="relative flex items-center justify-center w-11 h-11 text-text-primary"
-    >
-      {icon}
-      {badge ? (
-        <span className="absolute top-2 left-2 min-w-2.5 h-2.5 px-0.5 rounded-full bg-danger text-white text-[5px] font-semibold leading-2.5 text-center">
-          {badge > 9 ? '+9' : badge}
-        </span>
-      ) : null}
-    </Link>
-  );
-
-  const iconClass = (path: string) =>
-    `w-5 h-5 ${isActive(path) ? 'stroke-[2.6]' : ''}`;
+  const isActivePath = (path: string) => pathname === path;
+  const activeColor = theme === 'dark' ? '#ffffff' : '#000000';
+  const inactiveColor = theme === 'dark' ? '#a0a0a0' : '#737373';
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-14 bg-bg-primary border-t border-border-strong flex justify-around items-center px-4 z-1100">
-      {iconLink('/', 'خانه', <HomeIcon className={iconClass('/')} />)}
-      {iconLink('/cart', 'سبد خرید', <CartIcon className={iconClass('/cart')} />, cartCount)}
-      {iconLink('/create-post', 'ساخت پست', <PlusIcon className={iconClass('/create-post')} />)}
-      {iconLink('/search', 'جستجو', <SearchIcon className={iconClass('/search')} />)}
-      <Link
-        href="/profile"
-        aria-label="پروفایل"
-        aria-current={profileActive ? 'page' : undefined}
-        className="flex items-center justify-center w-11 h-11"
-      >
-        <span
-          className="relative w-6.25 h-6.25 rounded-full overflow-hidden bg-placeholder flex items-center justify-center"
-          style={{ boxShadow: `0 0 0 2px ${statusRingColor(user?.status)}` }}
-        >
-          {user?.avatar ? (
-            <Image src={user.avatar} alt="" fill sizes="25px" className="object-cover" />
-          ) : (
-            <UserIcon className="w-4 h-4 text-text-secondary" />
-          )}
-        </span>
-      </Link>
+    <nav className="fixed bottom-0 left-0 right-0 h-[70px] bg-[var(--color-bg-secondary)] border-t border-[var(--color-border-color)] flex justify-around items-center px-3 z-[1100] shadow-[0_-2px_10px_var(--color-shadow)]">
+      {menuItems.map((item) => {
+        const active =
+          !(suppressActiveProfile && item.path === '/profile') &&
+          isActivePath(item.path);
+        const IconComponent = item.icon;
+        const itemColor = active ? activeColor : inactiveColor;
+
+        return (
+          <Link
+            key={item.name}
+            href={item.path}
+            className="flex flex-col items-center gap-1 no-underline flex-1 py-1 transition-all duration-200 hover:scale-105"
+            style={{ color: itemColor }}
+          >
+            <div className="relative flex items-center justify-center">
+              <IconComponent
+                className="w-6 h-6 block"
+                stroke={itemColor}
+                fill={active ? itemColor : 'none'}
+              />
+            </div>
+            <span className="text-[11px] transition-colors duration-200">{item.name}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }

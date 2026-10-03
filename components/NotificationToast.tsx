@@ -249,7 +249,7 @@ const ToastItem = ({ toast, onClose }: ToastItemProps) => {
         );
       default:
         return (
-          <svg className="w-5 h-5 text-accent-color" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" stroke="currentColor"/>
             <line x1="12" y1="12" x2="12" y2="16" stroke="currentColor"/>
             <line x1="12" y1="8" x2="12.01" y2="8" stroke="currentColor"/>
@@ -263,7 +263,7 @@ const ToastItem = ({ toast, onClose }: ToastItemProps) => {
       case 'success': return 'border-emerald-500';
       case 'error': return 'border-red-500';
       case 'warning': return 'border-amber-500';
-      default: return 'border-accent-color';
+      default: return 'border-blue-500';
     }
   };
 
@@ -272,7 +272,7 @@ const ToastItem = ({ toast, onClose }: ToastItemProps) => {
       case 'success': return 'bg-emerald-500';
       case 'error': return 'bg-red-500';
       case 'warning': return 'bg-amber-500';
-      default: return 'bg-accent-color';
+      default: return 'bg-blue-500';
     }
   };
 

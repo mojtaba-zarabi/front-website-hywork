@@ -265,11 +265,11 @@ function VerifyPageContent() {
   console.log('[صفحه تایید] نمایش فرم تایید');
   return (
     <main 
-      className="min-h-screen bg-black px-4 pt-0 pb-9"
+      className="min-h-screen flex items-center justify-center bg-bg-primary p-4"
       role="main"
       aria-label="صفحه تایید کد"
     >
-      <div className="w-full max-w-102 mx-auto">
+      <div className="w-full max-w-md">
         <VerifyForm
           identifier={phoneNumber} // شماره تلفن برای نمایش
           onVerify={handleVerify} // تابع تایید کد

@@ -7,9 +7,6 @@ import { toPersianNumber } from '@/utils/numberUtils';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useToast } from '@/components/NotificationToast';
 import styles from './page.module.css';
-import Sidebar from '@/components/Sidebar';
-import MobileBottomNav from '@/components/MobileBottomNav';
-import { MoreIcon, PhoneIcon, VideoIcon as VideoCallIcon, MicIcon, CameraIcon, SmileIcon } from '@/components/icons';
 
 // ============================================================
 // 1️⃣ آیکون‌های SVG
@@ -932,43 +929,38 @@ export default function MessagesPage() {
 
   return (
     <div className={styles.messagesApp}>
-      {!isMobile && <Sidebar />}
-      {isMobile && !showChatDetail && <MobileBottomNav />}
-
       {/* ==================== لیست چت‌ها ==================== */}
       <div
         className={`${styles.chatList} ${
           isMobile && showChatDetail ? styles.chatListHidden : ''
         }`}
       >
-        {/* هدر لیست (فیگما: فلش بازگشت، عنوان ۲۵/۶۰۰، منو) */}
-        <div className={styles.listHeader}>
-          <button
-            className={styles.headerIconBtn}
-            onClick={() => router.push('/')}
-            aria-label="بازگشت به صفحه اصلی"
-          >
-            <BackIcon className="w-5 h-5" />
-          </button>
-          <h1 className={styles.listTitle}>گفتگوها</h1>
-          <button className={`${styles.headerIconBtn} ms-auto`} aria-label="گزینه‌های بیشتر">
-            <MoreIcon className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* سرچ کپسولی */}
+        {/* سرچ */}
         <div className={styles.chatSearch}>
-          <label className={styles.searchWrapper}>
-            <SearchIcon className="w-4.5 h-4.5 shrink-0" />
+          <div className={styles.searchWrapper}>
+            <SearchIcon className="w-5 h-5 text-[var(--color-text-muted)]" />
             <input
               type="text"
-              placeholder="جستجو"
+              placeholder="جستجو..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                console.log('🔍 جستجو:', e.target.value);
+                setSearchTerm(e.target.value);
+              }}
               className={styles.searchInput}
               aria-label="جستجوی چت‌ها"
             />
-          </label>
+          </div>
+          <button 
+            className={styles.homeBackBtn} 
+            onClick={() => {
+              console.log('🏠 بازگشت به صفحه اصلی');
+              router.push('/');
+            }}
+            aria-label="بازگشت به صفحه اصلی"
+          >
+            <BackIcon className="w-6 h-6" />
+          </button>
         </div>
 
         {/* لیست چت‌ها */}
@@ -981,7 +973,7 @@ export default function MessagesPage() {
               }`}
               onClick={() => handleSelectChat(chat)}
             >
-              <UserAvatar user={chat} size={57} />
+              <UserAvatar user={chat} size={isMobile ? 56 : 48} />
               <div className={styles.chatInfo}>
                 <div className={styles.chatName}>{chat.name}</div>
                 <div className={styles.chatMessage}>{chat.lastMessage}</div>
@@ -1006,41 +998,24 @@ export default function MessagesPage() {
       >
         {selectedChat ? (
           <>
-            {/* هدر چت (فیگما: بازگشت، نام، تماس صوتی/تصویری و منو) */}
+            {/* هدر چت */}
             <div className={styles.chatHeader}>
-              {isMobile && (
-                <button
-                  className={styles.headerIconBtn}
-                  onClick={handleBackToList}
-                  aria-label="بازگشت به لیست چت‌ها"
-                >
-                  <BackIcon className="w-5 h-5" />
-                </button>
-              )}
-              <UserAvatar user={selectedChat} size={40} />
+              <UserAvatar user={selectedChat} size={isMobile ? 44 : 40} />
               <div className={styles.chatHeaderInfo}>
                 <div className={styles.chatHeaderName}>{selectedChat.name}</div>
                 <div className={styles.chatHeaderStatus}>
                   {selectedChat.isOnline ? 'آنلاین' : 'آفلاین'}
                 </div>
               </div>
-              <button
-                className={styles.headerIconBtn}
-                aria-label="تماس صوتی"
-                onClick={() => router.push(`/call?type=voice&name=${encodeURIComponent(selectedChat.name)}`)}
-              >
-                <PhoneIcon className="w-4.5 h-4.5" />
-              </button>
-              <button
-                className={styles.headerIconBtn}
-                aria-label="تماس تصویری"
-                onClick={() => router.push(`/call?type=video&name=${encodeURIComponent(selectedChat.name)}`)}
-              >
-                <VideoCallIcon className="w-5 h-5" />
-              </button>
-              <button className={styles.headerIconBtn} aria-label="گزینه‌های بیشتر">
-                <MoreIcon className="w-6 h-6" />
-              </button>
+              {isMobile && (
+                <button 
+                  className={styles.backBtn} 
+                  onClick={handleBackToList}
+                  aria-label="بازگشت به لیست چت‌ها"
+                >
+                  <BackIcon className="w-6 h-6" />
+                </button>
+              )}
             </div>
 
             {/* پیام‌ها */}
@@ -1061,44 +1036,36 @@ export default function MessagesPage() {
               />
             )}
 
-            {/* ورودی پیام (فیگما: دکمه‌ی گرد مشکی ۵۰ پیکسلی + کپسول مشکی با آیکون‌های سفید) */}
+            {/* ورودی پیام */}
             <div className={styles.chatInputArea}>
-              <button
-                onClick={handleSendMessage}
-                className={styles.sendBtn}
-                aria-label={newMessage.trim() ? 'ارسال پیام' : 'پیام صوتی'}
+              <button 
+                className={styles.attachBtn} 
+                onClick={handleAttachClick}
+                aria-label="پیوست فایل"
               >
-                {newMessage.trim() ? <SendIcon className="w-5 h-5" /> : <MicIcon className="w-5 h-5" />}
+                <AttachIcon className="w-6 h-6" />
               </button>
-              <div className={styles.composer}>
-                <button className={styles.attachBtn} onClick={handleAttachClick} aria-label="پیوست فایل">
-                  <AttachIcon className="w-5 h-5" />
-                </button>
-                <button
-                  className={styles.attachBtn}
-                  onClick={() => imageInputRef.current?.click()}
-                  aria-label="ارسال تصویر"
-                >
-                  <CameraIcon className="w-5 h-5" />
-                </button>
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder="پیام..."
-                  className={styles.messageInput}
-                  aria-label="ورودی پیام"
-                />
-                <button className={styles.attachBtn} onClick={handleAttachClick} aria-label="ایموجی">
-                  <SmileIcon className="w-5 h-5" />
-                </button>
-              </div>
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="پیام..."
+                className={styles.messageInput}
+                aria-label="ورودی پیام"
+              />
+              <button 
+                onClick={handleSendMessage} 
+                className={styles.sendBtn}
+                aria-label="ارسال پیام"
+              >
+                <SendIcon className="w-5 h-5" />
+              </button>
             </div>
 
             {/* فایل‌های مخفی برای آپلود */}

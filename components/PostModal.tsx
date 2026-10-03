@@ -112,8 +112,8 @@ const HeartIcon = ({ filled }: { filled: boolean }) => (
     width="20"
     height="20"
     viewBox="0 0 24 24"
-    fill={filled ? 'currentColor' : 'none'}
-    stroke="currentColor"
+    fill={filled ? '#ff3040' : 'none'}
+    stroke={filled ? '#ff3040' : 'currentColor'}
     strokeWidth="1.5"
   >
     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
@@ -154,8 +154,8 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
     width="16"
     height="16"
     viewBox="0 0 24 24"
-    fill={filled ? 'currentColor' : 'none'}
-    stroke="currentColor"
+    fill={filled ? '#FFD700' : 'none'}
+    stroke="#FFD700"
     strokeWidth="1.5"
   >
     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
@@ -231,7 +231,7 @@ export default function PostModal({ post, onAddToCart, onClose, onSellerClick }:
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center" onClick={handleOverlayClick}>
         <div className="bg-[var(--color-bg-card)] p-10 text-center text-[var(--color-text-primary)]">
           اطلاعات پست در دسترس نیست
-          <button onClick={handleClose} className="mt-5 px-5 py-2.5 bg-[var(--color-accent-color)] text-on-accent border-none cursor-pointer">
+          <button onClick={handleClose} className="mt-5 px-5 py-2.5 bg-[var(--color-accent-color)] text-white border-none cursor-pointer">
             بستن
           </button>
         </div>
@@ -397,7 +397,7 @@ export default function PostModal({ post, onAddToCart, onClose, onSellerClick }:
                 </div>
                 <div className="flex items-center gap-1.5 p-1.5">
                   <StarIcon filled={true} />
-                  <span className="text-xs font-bold text-text-primary">
+                  <span className="text-xs font-bold text-amber-500">
                     {formatRating(post.rating || 4.5)}
                   </span>
                 </div>
@@ -526,7 +526,7 @@ export default function PostModal({ post, onAddToCart, onClose, onSellerClick }:
                       disabled={!commentText.trim()}
                       className={`h-10 min-w-16 shrink-0 rounded-full border-none px-3 font-semibold ${
                         commentText.trim()
-                          ? 'bg-[var(--color-accent-color)] text-on-accent cursor-pointer'
+                          ? 'bg-[var(--color-accent-color)] text-white cursor-pointer'
                           : 'bg-[var(--color-border-color)] text-[var(--color-text-muted)] cursor-not-allowed'
                       }`}
                     >

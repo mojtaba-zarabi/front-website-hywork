@@ -135,10 +135,10 @@ const OtpInput = forwardRef<OtpInputRef, OtpInputProps>(({
 
   return (
     <div 
-      className="grid gap-3 w-full" 
+      className="flex gap-2 sm:gap-3 justify-center my-4" 
       dir="ltr"
       onClick={handleContainerClick}
-      style={{ cursor: disabled ? 'default' : 'text', gridTemplateColumns: `repeat(${length}, minmax(0, 1fr))` }}
+      style={{ cursor: disabled ? 'default' : 'text' }}
     >
       {Array.from({ length }).map((_, index) => (
         <input
@@ -156,12 +156,13 @@ const OtpInput = forwardRef<OtpInputRef, OtpInputProps>(({
           disabled={disabled}
           dir="ltr"
           className={`
-            w-full aspect-square min-w-0
-            text-center text-[30px] font-normal text-white
-            bg-transparent border-2 rounded-xl outline-none transition-all
-            focus:border-[3px]
+            w-12 h-14 sm:w-14 sm:h-16 
+            text-center text-xl sm:text-2xl font-bold 
+            border-2 rounded-xl outline-none transition-all
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+            focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]
             disabled:opacity-60 disabled:cursor-not-allowed
-            ${error ? 'border-danger' : 'border-white'}
+            ${error ? 'border-red-500 focus:border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.2)]' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}
           `}
           style={{ 
             direction: 'ltr',

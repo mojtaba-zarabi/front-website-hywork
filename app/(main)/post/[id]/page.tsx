@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
-import AppShell from '@/components/AppShell';
-import PageHeader from '@/components/PageHeader';
-import { Button, SpecList } from '@/components/FormControls';
+import dynamic from 'next/dynamic';
+import Sidebar from '@/components/Sidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
+import UserAvatar from '@/components/UserAvatar';
 import PostSlider from '@/components/PostSlider';
 import DropdownMenu from '@/components/DropdownMenu';
 import { toPersianNumber, formatPrice, formatRating } from '@/utils/numberUtils';
@@ -17,8 +17,16 @@ import usersData from '@/data/users.json';
 import type { Post as SharedPost } from '@/types';
 
 // ==================== ICONS ====================
+const CartIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+  </svg>
+);
+
 const HeartIcon = ({ filled = false, size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? "#ff3040" : "none"} stroke={filled ? "#ff3040" : "currentColor"} strokeWidth="1.5">
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
@@ -42,7 +50,7 @@ const SaveIcon = ({ filled = false, size = 20 }) => (
 );
 
 const StarIcon = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="#FFD700" stroke="#FFD700" strokeWidth="1">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
@@ -58,6 +66,12 @@ const MoreVerticalIcon = ({ size = 20 }) => (
 const NavigationIcon = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
     <path d="M12 2L2 22l10-6 10 6L12 2z" />
+  </svg>
+);
+
+const ArrowBackIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M19 12H5M12 19l-7-7 7-7" />
   </svg>
 );
 
@@ -231,7 +245,7 @@ const CommentModal: React.FC<{
               disabled={!commentText.trim()}
               className={`px-5 py-2.5 rounded-3xl flex items-center gap-1.5 transition-all ${
                 commentText.trim()
-                  ? 'bg-accent-color text-on-accent cursor-pointer hover:bg-accent-hover'
+                  ? 'bg-accent-color text-white cursor-pointer hover:bg-accent-hover'
                   : 'bg-bg-surface text-text-muted border border-border-color cursor-not-allowed'
               }`}
             >
@@ -242,7 +256,7 @@ const CommentModal: React.FC<{
           <div className="p-5 text-center border-t border-border-color">
             <p className="text-text-secondary">برای نوشتن نظر لطفاً وارد حساب کاربری خود شوید</p>
             <button
-              className="mt-3 px-5 py-2 bg-accent-color text-on-accent border-none rounded-2xl cursor-pointer"
+              className="mt-3 px-5 py-2 bg-accent-color text-white border-none rounded-2xl cursor-pointer"
               onClick={() => window.location.href = '/login'}
             >
               ورود به حساب
@@ -385,7 +399,6 @@ export default function PostDetailPage() {
 
   // ✅ اگر کاربر صاحب پست است، گزینه حذف رو هم اضافه کن
   if (currentUser && post && currentUser.id === post.userId) {
-    dropdownItems.push({ label: 'ویرایش پست', icon: '✏️', onClick: () => router.push(`/post/${post.id}/edit`) });
     dropdownItems.push({ label: 'حذف پست', icon: '🗑️', onClick: handleDeletePost });
   }
 
@@ -407,161 +420,330 @@ export default function PostDetailPage() {
   // ==================== LOADING ====================
   if (loading) {
     return (
-      <AppShell>
+      <>
+        {!isMobile && <Sidebar />}
+        {isMobile && <MobileBottomNav />}
         <div className="text-center py-12 text-text-muted">
-          <div className="w-10 h-10 border-3 border-placeholder border-t-accent-color rounded-full animate-spin mx-auto" />
+          <div className="w-10 h-10 border-3 border-border-color border-t-accent-color rounded-full animate-spin mx-auto" />
           <p className="mt-4">در حال بارگذاری...</p>
         </div>
-      </AppShell>
+      </>
     );
   }
 
   if (!post) {
     return (
-      <AppShell>
-        <PageHeader title="پست" onBack={handleBack} />
-        <div className="text-center py-12 px-4">
-          <h2 className="text-lg font-medium text-text-primary">پستی یافت نشد</h2>
-          <Button size="md" className="mt-5" onClick={() => router.push('/')}>
+      <>
+        {!isMobile && <Sidebar />}
+        {isMobile && <MobileBottomNav />}
+        <div className="text-center py-12">
+          <h2 className="text-text-primary">پستی یافت نشد</h2>
+          <button
+            onClick={() => router.push('/')}
+            className="mt-5 px-5 py-2.5 bg-accent-color text-white border-none rounded-lg cursor-pointer"
+          >
             بازگشت به صفحه اصلی
-          </Button>
+          </button>
         </div>
-      </AppShell>
+      </>
     );
   }
 
   const likesCount = (post.likesCount || 0) + (liked ? 1 : 0);
   const postImages = post.images?.length ? post.images : (post.image ? [post.image] : []);
 
-  // مشخصات پست به شکل فهرست «Feature» فیگما
-  const features = [
-    { label: 'دسته‌بندی', value: post.category || 'عمومی' },
-    post.brand && { label: 'برند', value: post.brand },
-    post.model && { label: 'مدل', value: post.model },
-    post.color && { label: 'رنگ', value: post.color },
-    post.weight && { label: 'وزن', value: post.weight },
-    {
-      label: 'موجودی',
-      value: (post.stock || 0) > 0 ? `${toPersianNumber(post.stock)} عدد` : <span className="text-danger">ناموجود</span>,
-    },
-    { label: 'تاریخ انتشار', value: new Date(post.createdAt).toLocaleDateString('fa-IR') },
-  ].filter(Boolean) as { label: string; value: React.ReactNode }[];
-
-  const counter = 'flex items-center gap-1 text-[8px] text-text-primary';
-
   // ==================== RENDER ====================
-  // فیگما (single page service / edit post): هدر «پست»، فروشنده بالا، تصویر تمام‌عرض،
-  // شمارنده‌ها، عنوان ۱۸/۶۰۰، توضیح ۱۲/۴۰۰، فهرست مشخصات، قیمت ۴۰ پیکسلی با کپسول واحد
   return (
-    <AppShell>
-      <PageHeader title="پست" onBack={handleBack} />
+    <>
+      {!isMobile && <Sidebar />}
+      {isMobile && <MobileBottomNav />}
 
-      <div className="flex items-center gap-2 px-4 pb-14">
-        <button type="button" onClick={handleViewProfile} className="flex items-center gap-2.5 text-right">
-          <span className="relative w-8.75 h-8.75 rounded-full overflow-hidden bg-placeholder ring-[1.5px] ring-[#00ca18] shrink-0">
-            {post.authorAvatar && <Image src={post.authorAvatar} alt="" fill sizes="35px" className="object-cover" />}
-          </span>
-          <span>
-            <span className="block text-sm font-semibold text-text-primary leading-4.25">{post.authorUsername || 'نویسنده'}</span>
-            <span className="block text-xs text-[#bebebe] leading-3.75">{post.authorName || ''}</span>
-          </span>
-        </button>
-        <span className="ms-auto text-lg font-medium text-[#404040]">{formatCommentDate(post.createdAt)}</span>
-        <DropdownMenu items={dropdownItems} triggerIcon={<MoreVerticalIcon size={20} />} iconSize={20} />
-      </div>
-
-      <div className="relative w-full aspect-[440/434] bg-placeholder">
-        <PostSlider images={postImages} postTitle={post.caption || post.title} />
-      </div>
-
-      <div className="flex items-center justify-between px-4 mt-4">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setLiked(!liked)} className={counter} aria-pressed={liked} aria-label="پسندیدن">
-            <HeartIcon filled={liked} size={20} />
-            <span>{toPersianNumber(likesCount)}</span>
-          </button>
-          <button type="button" className={counter} aria-label="اشتراک‌گذاری">
-            <ShareIcon size={20} />
-            <span>{toPersianNumber(post.shareCount || 0)}</span>
-          </button>
-          <button type="button" onClick={() => setIsCommentModalOpen(true)} className={counter} aria-label="نظرات">
-            <CommentIcon size={20} />
-            <span>{toPersianNumber(comments.length)}</span>
-          </button>
-          <button type="button" onClick={() => setSaved(!saved)} className={counter} aria-pressed={saved} aria-label="ذخیره">
-            <SaveIcon filled={saved} size={20} />
-          </button>
-        </div>
-        <span className={counter}>
-          <StarIcon size={18} />
-          <span>{formatRating(post.rating || 0)}</span>
-        </span>
-      </div>
-
-      <h1 className="m-0 mt-6 px-4 text-lg font-semibold leading-5.5 text-text-primary">{post.title || post.caption}</h1>
-      <hr className="my-4 border-0 border-t border-[#b8b8b8]" />
-      <p className="m-0 px-4 text-xs leading-relaxed text-text-primary whitespace-pre-line">
-        {post.caption || 'توضیحاتی برای این پست موجود نیست.'}
-      </p>
-      <hr className="mt-3 mb-10 border-0 border-t border-[#b8b8b8]" />
-
-      <SpecList title="مشخصات" items={features} className="px-4" />
-
-      <div className="px-4 mt-16 mb-10 flex flex-col items-end">
-        <span className="text-[40px] leading-12 text-text-primary">{formatPrice(post.price)}</span>
-        <Link
-          href={`/post/${post.id}/reserve`}
-          className="mt-1 px-2.5 h-5 rounded-full bg-accent-color text-on-accent text-xs leading-5 hover:text-on-accent"
-        >
-          تومان · ثبت سفارش
-        </Link>
-      </div>
-
-      {/* نظرات */}
-      <section className="px-4 pb-8">
-        <h2 className="m-0 mb-4 text-lg font-medium text-text-primary">نظرات ({toPersianNumber(comments.length)})</h2>
-        {currentUser && (
-          <div className="flex items-center gap-2 h-12 px-4 mb-5 rounded-[10px] border border-border-strong">
-            <input
-              type="text"
-              placeholder="نوشتن..."
-              value={newCommentText}
-              onChange={(e) => setNewCommentText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendCommentInline()}
-              className="flex-1 min-w-0 h-full border-none outline-none bg-transparent text-sm text-text-primary placeholder:text-[#4e4444]"
-            />
-            <button
-              type="button"
-              onClick={handleSendCommentInline}
-              disabled={!newCommentText.trim()}
-              aria-label="ارسال نظر"
-              className="text-text-primary disabled:text-text-muted"
-            >
-              <NavigationIcon size={19} />
-            </button>
-          </div>
-        )}
-        {comments.length === 0 ? (
-          <p className="text-sm text-text-secondary">هنوز نظری ثبت نشده است. اولین نفر باشید!</p>
-        ) : (
-          <ul className="list-none m-0 p-0 flex flex-col gap-4">
-            {comments.map((comment) => (
-              <li key={comment.id} className="flex gap-3 pb-4 border-b-[0.5px] border-border-color">
-                <span className="relative w-8 h-8 rounded-full overflow-hidden bg-placeholder shrink-0">
-                  {comment.userAvatar && <Image src={comment.userAvatar} alt="" fill sizes="32px" className="object-cover" />}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-sm font-semibold text-text-primary">{comment.userName}</span>
-                    <span className="text-[10px] text-text-secondary">{formatCommentDate(comment.createdAt)}</span>
+      <div className="min-h-screen bg-bg-primary">
+        {/* Desktop Layout */}
+        <div className="hidden md:flex">
+          <div className="flex gap-7 max-w-[1200px] mx-auto p-7 w-full">
+            {/* Right Column */}
+            <div className="flex-1 min-w-0 flex flex-col gap-5">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3 cursor-pointer" onClick={handleViewProfile}>
+                  <UserAvatar
+                    user={{ id: post.userId, avatar: post.authorAvatar, username: post.authorUsername, status: 'ready' }}
+                    size={44}
+                  />
+                  <div>
+                    <div className="font-semibold text-sm text-text-primary">{post.authorUsername || 'نویسنده'}</div>
+                    <div className="text-xs text-text-muted">{post.authorName || ''}</div>
                   </div>
-                  <p className="m-0 mt-1 text-sm leading-relaxed text-text-primary break-words">{comment.text}</p>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                <DropdownMenu items={dropdownItems} triggerIcon={<MoreVerticalIcon size={20} />} iconSize={20} />
+              </div>
+
+              <div className="aspect-square bg-black overflow-hidden rounded-xl">
+                <PostSlider images={postImages} postTitle={post.caption || post.title} />
+              </div>
+
+              <div className="flex justify-between items-center flex-wrap gap-2.5">
+                <div className="flex gap-2 items-center flex-wrap">
+                  <button className="bg-transparent border-none flex items-center gap-1.5 cursor-pointer text-sm font-medium text-text-primary px-3 py-2 rounded-lg transition-all hover:bg-bg-surface">
+                    <CartIcon size={22} /><span>{toPersianNumber(0)}</span>
+                  </button>
+                  <button
+                    onClick={() => setLiked(!liked)}
+                    className="bg-transparent border-none flex items-center gap-1.5 cursor-pointer text-sm font-medium text-text-primary px-3 py-2 rounded-lg transition-all hover:bg-bg-surface"
+                  >
+                    <HeartIcon filled={liked} size={22} /><span>{toPersianNumber(likesCount)}</span>
+                  </button>
+                  <button
+                    onClick={() => setIsCommentModalOpen(true)}
+                    className="bg-transparent border-none flex items-center gap-1.5 cursor-pointer text-sm font-medium text-text-primary px-3 py-2 rounded-lg transition-all hover:bg-bg-surface"
+                  >
+                    <CommentIcon size={22} /><span>{toPersianNumber(comments.length)}</span>
+                  </button>
+                  <button className="bg-transparent border-none flex items-center gap-1.5 cursor-pointer text-sm font-medium text-text-primary px-3 py-2 rounded-lg transition-all hover:bg-bg-surface">
+                    <ShareIcon size={22} /><span>{toPersianNumber(post.shareCount || 0)}</span>
+                  </button>
+                  <button
+                    onClick={() => setSaved(!saved)}
+                    className="bg-transparent border-none flex items-center gap-1.5 cursor-pointer text-sm font-medium text-text-primary px-3 py-2 rounded-lg transition-all hover:bg-bg-surface"
+                  >
+                    <SaveIcon filled={saved} size={22} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-bg-surface">
+                  <StarIcon size={16} /><span className="text-sm font-semibold text-amber-500">{formatRating(post.rating || 0)}</span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-border-color">
+                <span className="text-2xl font-extrabold text-accent-color">{formatPrice(post.price)} تومان</span>
+              </div>
+            </div>
+
+            {/* Left Column */}
+            <div className="flex-1 min-w-0 flex flex-col gap-5">
+              <h1 className="text-2xl font-bold text-text-primary m-0">{post.title || post.caption}</h1>
+              <p className="text-sm leading-relaxed text-text-secondary m-0">{post.caption || 'توضیحاتی برای این پست موجود نیست.'}</p>
+
+              <div className="bg-bg-surface p-4 rounded-xl">
+                <h3 className="text-sm font-semibold mb-3 text-text-primary">مشخصات پست</h3>
+                <div className="grid gap-3">
+                  <div className="flex justify-between items-center py-2 border-b border-border-color">
+                    <span className="text-sm text-text-muted">دسته بندی</span>
+                    <span className="text-sm font-medium text-text-primary">{post.category || 'عمومی'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-border-color">
+                    <span className="text-sm text-text-muted">موجودی</span>
+                    <span className={`text-sm font-medium ${(post.stock || 0) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {(post.stock || 0) > 0 ? `${toPersianNumber(post.stock)} عدد` : 'ناموجود'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-text-muted">تاریخ انتشار</span>
+                    <span className="text-sm font-medium text-text-primary">{new Date(post.createdAt).toLocaleDateString('fa-IR')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments Section */}
+              <div className="bg-bg-surface p-4 rounded-xl">
+                <h3 className="text-sm font-semibold mb-3 text-text-primary">نظرات ({toPersianNumber(comments.length)})</h3>
+
+                {currentUser && (
+                  <div className="flex gap-2.5 mb-4">
+                    <input
+                      type="text"
+                      placeholder="نظر خود را بنویسید..."
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendCommentInline()}
+                      className="flex-1 px-3.5 py-2.5 border border-border-color rounded-3xl outline-none text-sm bg-bg-primary text-text-primary rtl"
+                    />
+                    <button
+                      onClick={handleSendCommentInline}
+                      disabled={!newCommentText.trim()}
+                      className={`px-4 py-2 rounded-3xl flex items-center gap-1.5 transition-all ${
+                        newCommentText.trim()
+                          ? 'bg-accent-color text-white cursor-pointer hover:bg-accent-hover'
+                          : 'bg-bg-surface text-text-muted border border-border-color cursor-not-allowed'
+                      }`}
+                    >
+                      <NavigationIcon size={18} />
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto">
+                  {comments.length === 0 ? (
+                    <div className="text-center py-7 text-text-muted">
+                      <p>هنوز کامنتی ثبت نشده است</p>
+                      <p className="text-xs mt-2 text-text-secondary">اولین نفری باشید که نظر می‌دهید!</p>
+                    </div>
+                  ) : (
+                    comments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3 pb-3 border-b border-border-color">
+                        <img
+                          src={comment.userAvatar || '/default-avatar.png'}
+                          alt={comment.userName}
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1 flex-wrap gap-1">
+                            <span className="text-sm font-semibold text-text-primary">{comment.userName}</span>
+                            <span className="text-[10px] text-text-muted">{formatCommentDate(comment.createdAt)}</span>
+                          </div>
+                          <p className="text-sm leading-relaxed text-text-secondary m-1 break-words">{comment.text}</p>
+                          {comment.likes > 0 && (
+                            <div className="flex items-center gap-1 mt-1.5 text-[11px] text-text-muted">
+                              <HeartIcon size={12} filled={false} />
+                              <span>{toPersianNumber(comment.likes)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="md:hidden flex flex-col pt-4 pb-[70px]">
+          <div className="flex flex-col gap-3 px-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 cursor-pointer" onClick={handleViewProfile}>
+                <UserAvatar
+                  user={{ id: post.userId, avatar: post.authorAvatar, username: post.authorUsername, status: 'ready' }}
+                  size={40}
+                />
+                <div>
+                  <div className="font-semibold text-sm text-text-primary">{post.authorUsername || 'نویسنده'}</div>
+                  <div className="text-[11px] text-text-muted">{post.authorName || ''}</div>
+                </div>
+              </div>
+              <DropdownMenu items={dropdownItems} triggerIcon={<MoreVerticalIcon size={20} />} iconSize={20} />
+            </div>
+
+            <div className="aspect-square bg-black overflow-hidden">
+              <PostSlider images={postImages} postTitle={post.caption || post.title} />
+            </div>
+
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div className="flex gap-1 items-center flex-wrap">
+                <button className="bg-transparent border-none flex items-center gap-1 cursor-pointer text-xs font-medium text-text-primary px-1.5 py-1.5 rounded-lg transition-all hover:bg-bg-surface">
+                  <CartIcon size={18} /><span>{toPersianNumber(0)}</span>
+                </button>
+                <button
+                  onClick={() => setLiked(!liked)}
+                  className="bg-transparent border-none flex items-center gap-1 cursor-pointer text-xs font-medium text-text-primary px-1.5 py-1.5 rounded-lg transition-all hover:bg-bg-surface"
+                >
+                  <HeartIcon filled={liked} size={18} /><span>{toPersianNumber(likesCount)}</span>
+                </button>
+                <button
+                  onClick={() => setIsCommentModalOpen(true)}
+                  className="bg-transparent border-none flex items-center gap-1 cursor-pointer text-xs font-medium text-text-primary px-1.5 py-1.5 rounded-lg transition-all hover:bg-bg-surface"
+                >
+                  <CommentIcon size={18} /><span>{toPersianNumber(comments.length)}</span>
+                </button>
+                <button className="bg-transparent border-none flex items-center gap-1 cursor-pointer text-xs font-medium text-text-primary px-1.5 py-1.5 rounded-lg transition-all hover:bg-bg-surface">
+                  <ShareIcon size={18} /><span>{toPersianNumber(post.shareCount || 0)}</span>
+                </button>
+                <button
+                  onClick={() => setSaved(!saved)}
+                  className="bg-transparent border-none flex items-center gap-1 cursor-pointer text-xs font-medium text-text-primary px-1.5 py-1.5 rounded-lg transition-all hover:bg-bg-surface"
+                >
+                  <SaveIcon filled={saved} size={18} />
+                </button>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-2xl bg-bg-surface">
+                <StarIcon size={14} /><span className="text-xs font-semibold text-amber-500">{formatRating(post.rating || 0)}</span>
+              </div>
+            </div>
+
+            <div className="pt-1.5 border-t border-border-color">
+              <span className="text-xl font-extrabold text-accent-color">{formatPrice(post.price)} تومان</span>
+            </div>
+
+            <h1 className="text-lg font-bold text-text-primary m-0">{post.title || post.caption}</h1>
+            <p className="text-sm leading-relaxed text-text-secondary m-0">{post.caption || 'توضیحاتی برای این پست موجود نیست.'}</p>
+
+            <div className="bg-bg-surface p-3 rounded-xl">
+              <h3 className="text-sm font-semibold mb-3 text-text-primary">مشخصات پست</h3>
+              <div className="grid gap-2">
+                <div className="flex justify-between items-center py-1.5 border-b border-border-color">
+                  <span className="text-sm text-text-muted">دسته بندی</span>
+                  <span className="text-sm font-medium text-text-primary">{post.category || 'عمومی'}</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-border-color">
+                  <span className="text-sm text-text-muted">موجودی</span>
+                  <span className={`text-sm font-medium ${(post.stock || 0) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {(post.stock || 0) > 0 ? `${toPersianNumber(post.stock)} عدد` : 'ناموجود'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1.5">
+                  <span className="text-sm text-text-muted">تاریخ انتشار</span>
+                  <span className="text-sm font-medium text-text-primary">{new Date(post.createdAt).toLocaleDateString('fa-IR')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Comments */}
+            <div className="bg-bg-surface p-3 rounded-xl mb-4">
+              <h3 className="text-sm font-semibold mb-3 text-text-primary">نظرات ({toPersianNumber(comments.length)})</h3>
+
+              {currentUser && (
+                <div className="flex gap-2.5 mb-3">
+                  <input
+                    type="text"
+                    placeholder="نظر خود را بنویسید..."
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendCommentInline()}
+                    className="flex-1 px-3 py-2 border border-border-color rounded-3xl outline-none text-sm bg-bg-primary text-text-primary rtl"
+                  />
+                  <button
+                    onClick={handleSendCommentInline}
+                    disabled={!newCommentText.trim()}
+                    className={`px-4 py-2 rounded-3xl flex items-center gap-1.5 transition-all ${
+                      newCommentText.trim()
+                        ? 'bg-accent-color text-white cursor-pointer hover:bg-accent-hover'
+                        : 'bg-bg-surface text-text-muted border border-border-color cursor-not-allowed'
+                    }`}
+                  >
+                    <NavigationIcon size={18} />
+                  </button>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto">
+                {comments.length === 0 ? (
+                  <div className="text-center py-5 text-text-muted">
+                    <p>هنوز کامنتی ثبت نشده است</p>
+                  </div>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3 pb-3 border-b border-border-color">
+                      <img
+                        src={comment.userAvatar || '/default-avatar.png'}
+                        alt={comment.userName}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center mb-1 flex-wrap gap-1">
+                          <span className="text-sm font-semibold text-text-primary">{comment.userName}</span>
+                          <span className="text-[10px] text-text-muted">{formatCommentDate(comment.createdAt)}</span>
+                        </div>
+                        <p className="text-sm leading-relaxed text-text-secondary m-1 break-words">{comment.text}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Comment Modal */}
       <CommentModal
@@ -592,6 +774,6 @@ export default function PostDetailPage() {
           animation: slideUp 0.3s ease;
         }
       `}</style>
-    </AppShell>
+    </>
   );
 }

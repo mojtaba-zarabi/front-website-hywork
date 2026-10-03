@@ -2,11 +2,8 @@
 'use client';
 
 import { useCallback, useMemo, useSyncExternalStore,useState  } from 'react';
-import Link from 'next/link';
-import AppShell from '@/components/AppShell';
-import PageHeader from '@/components/PageHeader';
-import WalletCard from '@/components/WalletCard';
-import { Button } from '@/components/FormControls';
+import Sidebar from '@/components/Sidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import {
   LineChart,
   Line,
@@ -211,20 +208,23 @@ const StatCard = ({
   value, 
   icon: Icon, 
   change, 
-  color = '#000000' 
+  color = '#3b82f6' 
 }: StatCardData) => {
   const persianChange = change !== undefined ? toPersianNumber(Math.abs(change).toString()) : '';
 
   return (
-    <div className="rounded-[10px] border border-border-strong p-4 flex items-center gap-3" role="group" aria-label={title}>
-      <div className="w-10 h-10 rounded-full bg-bg-surface flex items-center justify-center shrink-0" style={{ color }}>
-        <Icon className="w-5 h-5" />
+    <div 
+      className="bg-bg-card rounded-2xl p-5 flex items-center gap-4 border border-border-color transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_var(--color-shadow)]"
+      role="statistic"
+    >
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ color }}>
+        <Icon className="w-6 h-6" />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-xs font-medium text-text-secondary m-0 mb-1">{title}</h3>
-        <p className="text-xl font-bold text-text-primary m-0 wrap-break-word">{value}</p>
+        <h3 className="text-sm text-text-muted m-0 mb-1">{title}</h3>
+        <p className="text-xl font-bold text-text-primary m-0 wrap-break-word sm:text-lg">{value}</p>
         {change !== undefined && (
-          <span className={`text-[10px] font-medium inline-block mt-1 ${change > 0 ? 'text-success' : 'text-danger'}`}>
+          <span className={`text-xs font-medium inline-block mt-1 ${change > 0 ? 'text-green-500' : 'text-red-500'}`}>
             {change > 0 ? '↑' : '↓'} %{persianChange}
           </span>
         )}
@@ -250,14 +250,17 @@ const TabButton = ({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 flex items-center gap-1.5 pb-1 text-xs font-medium whitespace-nowrap border-b ${
-        isActive ? 'text-text-primary border-border-strong' : 'text-[#9e9e9e] border-transparent'
+      className={`flex flex-col items-center gap-1.5 px-4 py-2.5 bg-transparent border-none rounded-xl text-sm font-medium text-text-muted cursor-pointer transition-all duration-200 whitespace-nowrap sm:px-3 sm:py-2 sm:text-[11px] sm:gap-1 ${
+        isActive ? 'bg-bg-surface text-text-primary' : 'hover:bg-bg-surface/50'
       }`}
       role="tab"
       aria-selected={isActive}
+      aria-label={label}
     >
-      <Icon className="w-4 h-4" />
-      {label}
+      <span className="inline-flex items-center justify-center">
+        <Icon className="w-5.5 h-5.5" />
+      </span>
+      <span className="text-xs sm:text-[10px]">{label}</span>
     </button>
   );
 };
@@ -266,25 +269,35 @@ const TabButton = ({
  * کامپوننت کارت سفارش
  */
 const OrderCard = ({ order }: { order: Order }) => {
-  const status =
-    order.status === 'تحویل شده'
-      ? 'bg-success/15 text-success'
-      : order.status === 'در حال ارسال'
-        ? 'bg-bg-surface text-text-primary'
-        : 'bg-[#ffe100] text-warning-text';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'تحویل شده':
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      case 'در حال ارسال':
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      default:
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+    }
+  };
 
   return (
-    <div className="rounded-[10px] border border-border-strong p-4 flex items-center justify-between gap-4">
-      <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold text-text-primary m-0 mb-1 truncate">{order.product}</h4>
-        <p className="text-[10px] text-text-secondary m-0 mb-2">{order.date}</p>
-        <p className="text-lg font-semibold text-text-primary m-0">{toPersianNumber(order.price.toLocaleString('en-US'))}</p>
+    <div className="bg-bg-card rounded-xl p-4 flex justify-between items-center flex-wrap gap-4 border border-border-color sm:flex-col sm:text-center">
+      <div className="flex-1">
+        <h4 className="text-base font-semibold text-text-primary m-0 mb-1">
+          {order.product}
+        </h4>
+        <p className="text-xs text-text-muted mb-1">{order.date}</p>
+        <p className="text-sm font-semibold text-accent-color">
+          {toPersianNumber(order.price.toLocaleString('en-US'))} تومان
+        </p>
       </div>
-      <div className="flex flex-col items-end gap-2">
-        <span className={`inline-flex items-center h-4.5 px-2.5 rounded-[9px] text-[10px] font-semibold ${status}`}>{order.status}</span>
-        <Link href="/provider/sales/1" className="text-xs text-text-primary underline hover:text-text-primary">
+      <div className="text-center sm:w-full">
+        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+          {order.status}
+        </span>
+        <button className="block mt-2 mx-auto px-4 py-1.5 bg-bg-secondary border-none rounded-lg text-xs cursor-pointer text-text-primary transition-colors hover:bg-border-color">
           جزئیات
-        </Link>
+        </button>
       </div>
     </div>
   );
@@ -441,47 +454,46 @@ export default function DashboardPage() {
     return (
       <>
         {/* کارت‌های آمار */}
-        <div className="grid grid-cols-1 gap-3 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
           <StatCard
             title="کل فروش"
             value="۱۲,۵۰۰,۰۰۰ تومان"
             icon={CurrencyCoinIcon}
             change={12.5}
-            color="#000000"
+            color="#3b82f6"
           />
           <StatCard
             title="کل خرید"
             value="۳,۲۰۰,۰۰۰ تومان"
             icon={HandbagIcon}
             change={-5.2}
-            color="#9787ff"
+            color="#8b5cf6"
           />
           <StatCard
             title="سفارشات فعال"
             value="۸"
             icon={LayerIcon}
             change={2}
-            color="#ffcc00"
+            color="#f59e0b"
           />
           <StatCard
             title="میانگین امتیاز کاربران"
             value="۴.۸"
             icon={StarIcon}
             change={0.3}
-            color="#12da00"
+            color="#10b981"
           />
         </div>
 
         {/* نمودار */}
         <div className="grid gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="m-0 text-xl font-bold text-text-primary">نمودار فروش و خرید</h3>
-              <span className="text-[10px] text-text-primary">۶ ماه ▾</span>
-            </div>
+          <div className="bg-bg-card rounded-2xl p-4 sm:p-5 border border-border-color">
+            <h3 className="text-base font-semibold text-text-primary mb-4 sm:mb-5 sm:text-sm">
+              نمودار فروش و خرید
+            </h3>
             <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
               <LineChart data={SALES_DATA}>
-                <CartesianGrid stroke="#d9d9d9" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-color)" />
                 <XAxis
                   dataKey="month"
                   tick={{ fill: 'var(--color-text-secondary)', fontSize: isMobile ? 10 : 12 }}
@@ -504,8 +516,8 @@ export default function DashboardPage() {
                     fontSize: isMobile ? 10 : 12,
                   }}
                 />
-                <Line type="monotone" dataKey="فروش" stroke="#9787ff" strokeWidth={2} />
-                <Line type="monotone" dataKey="خرید" stroke="#ffcc00" strokeWidth={2} />
+                <Line type="monotone" dataKey="فروش" stroke="#3b82f6" strokeWidth={2} />
+                <Line type="monotone" dataKey="خرید" stroke="#10b981" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -531,29 +543,29 @@ export default function DashboardPage() {
             + افزودن محصول جدید
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="rounded-[10px] overflow-hidden border border-border-strong"
+              className="bg-bg-card rounded-2xl overflow-hidden border border-border-color transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_var(--color-shadow)]"
             >
               <div className="w-full h-37.5 bg-bg-secondary flex items-center justify-center">
-                <span className="text-xs text-text-secondary">بدون تصویر</span>
+                <span className="text-5xl">📷</span>
               </div>
               <div className="p-4">
                 <h4 className="text-base font-semibold text-text-primary m-0 mb-2">
                   محصول نمونه {i}
                 </h4>
-                <p className="text-lg font-semibold text-text-primary mb-2">۱,۲۵۰,۰۰۰</p>
+                <p className="text-lg font-bold text-accent-color mb-2">۱,۲۵۰,۰۰۰ تومان</p>
                 <div className="flex justify-between text-xs text-text-muted mb-3 flex-wrap gap-2">
-                  <span>فروش: ۲۳ عدد</span>
-                  <span>امتیاز ۴٫۸ (۱۲ نظر)</span>
+                  <span>📊 فروش: ۲۳ عدد</span>
+                  <span>⭐ ۴.۸ (۱۲ نظر)</span>
                 </div>
                 <div className="flex gap-2">
                   <button className="flex-1 px-3 py-2 bg-bg-secondary border-none rounded-lg text-xs cursor-pointer text-text-primary transition-colors hover:bg-border-color sm:py-1.5">
                     ویرایش
                   </button>
-                  <button className="flex-1 px-3 py-2 bg-bg-surface border-none rounded-lg text-xs cursor-pointer text-text-primary transition-colors hover:bg-accent-color hover:text-on-accent sm:py-1.5">
+                  <button className="flex-1 px-3 py-2 bg-bg-surface border-none rounded-lg text-xs cursor-pointer text-text-primary transition-colors hover:bg-accent-color hover:text-white sm:py-1.5">
                     آمار
                   </button>
                 </div>
@@ -596,51 +608,92 @@ export default function DashboardPage() {
         <h2 className="text-xl font-bold text-text-primary m-0 mb-4 sm:mb-5 sm:text-lg">
           کیف پول من
         </h2>
-        <div className="-mx-4">
-          <WalletCard balance={toPersianNumber(userData.balance.toLocaleString('en-US'))} owner={userData.name} />
-        </div>
-        <div className="mt-8 flex gap-3">
-          <Button className="flex-1" onClick={handleIncreaseBalance}>افزایش موجودی</Button>
-          <Button variant="outline" className="flex-1" onClick={handleWithdrawBalance}>برداشت</Button>
+        <div className="bg-linear-to-br from-[#1e293b] to-text-primary rounded-2xl p-6 sm:p-8 text-white">
+          <div className="text-center mb-6">
+            <p className="text-sm opacity-90 mb-2">موجودی فعلی</p>
+            <p className="text-3xl font-bold sm:text-2xl">
+              {toPersianNumber(userData.balance.toLocaleString('en-US'))} تومان
+            </p>
+          </div>
+          <div className="flex gap-3 justify-center flex-wrap sm:flex-col">
+            <button
+              onClick={handleIncreaseBalance}
+              className="px-6 py-2.5 bg-white border-none rounded-lg text-[#1e293b] font-semibold cursor-pointer transition-transform active:scale-95 sm:w-full"
+            >
+              افزایش موجودی
+            </button>
+            <button
+              onClick={handleWithdrawBalance}
+              className="px-6 py-2.5 bg-white/20 border border-white/30 rounded-lg text-white font-semibold cursor-pointer transition-colors hover:bg-white/30 sm:w-full"
+            >
+              برداشت وجه
+            </button>
+          </div>
         </div>
       </div>
     );
-  }, [userData.balance, userData.name, handleIncreaseBalance, handleWithdrawBalance]);
+  }, [userData.balance, handleIncreaseBalance, handleWithdrawBalance]);
 
   // ============================================
   // رندر اصلی
   // ============================================
 
   return (
-    <AppShell>
-      <PageHeader title="آمار و تحلیل" onMore={() => {}} />
+    <>
+      {/* سایدبار در همه صفحات به جز موبایل */}
+      {!isMobile && <Sidebar />}
+      {isMobile && <MobileBottomNav />}
 
-      <div className="flex items-center gap-2.5 px-4 pb-6">
-        <span className="w-8.75 h-8.75 rounded-full bg-placeholder ring-[1.5px] ring-[#00ca18] shrink-0" aria-hidden />
-        <span>
-          <span className="block text-sm font-semibold text-text-primary">{userData.name}</span>
-          <span className="block text-xs text-[#bebebe]">{userData.email}</span>
-        </span>
-      </div>
+      {/* کانتینر اصلی */}
+      <div className={`
+        min-h-screen bg-bg-primary overflow-x-hidden transition-all duration-300
+        ${!isMobile ? 'mr-18' : 'mr-0'}
+      `}>
+        <div className="max-w-[2000px] mx-auto w-full">
+          {/* هدر داشبورد */}
+          <div className="flex justify-between items-center bg-bg-secondary border-b border-border-color flex-wrap gap-4 px-4 py-4 sm:px-8 sm:py-6 md:flex-row md:text-right flex-col text-center">
+            <div>
+              <h1 className="text-2xl font-bold text-text-primary m-0 sm:text-xl">داشبورد کاربری</h1>
+              <p className="text-sm text-text-muted mt-1 sm:text-xs">
+                خوش آمدید! شما هم خریدار و هم فروشنده هستید
+              </p>
+            </div>
+            <div className="flex items-center gap-3 sm:justify-center">
+              <div className="w-12 h-12 rounded-full bg-bg-surface flex items-center justify-center sm:w-10 sm:h-10">
+                <span className="text-2xl sm:text-xl">👤</span>
+              </div>
+              <div>
+                <p className="font-semibold text-text-primary m-0 sm:text-sm">{userData.name}</p>
+                <p className="text-xs text-text-muted m-0 sm:text-[11px]">{userData.email}</p>
+              </div>
+            </div>
+          </div>
 
-      <div className="flex gap-5 overflow-x-auto px-4 pb-1.5 [scrollbar-width:none]" role="tablist">
-        {tabs.map((tab) => (
-          <TabButton
-            key={tab.id}
-            label={tab.label}
-            icon={tab.icon}
-            isActive={activeTab === tab.id}
-            onClick={() => handleTabChange(tab.id)}
-          />
-        ))}
-      </div>
+          {/* تب‌ها */}
+          <div 
+            className="flex gap-2 bg-bg-secondary border-b border-border-color overflow-x-auto px-4 py-3 sm:px-8 sm:py-4"
+            role="tablist"
+          >
+            {tabs.map((tab) => (
+              <TabButton
+                key={tab.id}
+                label={tab.label}
+                icon={tab.icon}
+                isActive={activeTab === tab.id}
+                onClick={() => handleTabChange(tab.id)}
+              />
+            ))}
+          </div>
 
-      <div className="px-4 pt-6 pb-10">
-        {activeTab === TABS.OVERVIEW && renderOverview()}
-        {activeTab === TABS.PRODUCTS && renderProducts()}
-        {activeTab === TABS.ORDERS && renderOrders()}
-        {activeTab === TABS.WALLET && renderWallet()}
+          {/* محتوای اصلی */}
+          <div className="p-4 sm:p-6 md:p-8">
+            {activeTab === TABS.OVERVIEW && renderOverview()}
+            {activeTab === TABS.PRODUCTS && renderProducts()}
+            {activeTab === TABS.ORDERS && renderOrders()}
+            {activeTab === TABS.WALLET && renderWallet()}
+          </div>
+        </div>
       </div>
-    </AppShell>
+    </>
   );
 }

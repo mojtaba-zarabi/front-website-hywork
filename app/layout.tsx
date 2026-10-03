@@ -1,6 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
-import { Inter, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UserProvider } from '@/contexts/UserContext'; // ✅ فقط ایمپورت
@@ -17,9 +17,8 @@ const yekanBakh = localFont({
   display: 'swap',
 });
 
-// فونت طراحی فیگما برای متن لاتین و اعداد؛ حروف فارسی به Yekan Bakh برمی‌گردند
-const inter = Inter({
-  variable: '--font-inter',
+const geistSans = Geist({
+  variable: '--font-geist-sans',
   subsets: ['latin'],
   display: 'swap',
 });
@@ -68,7 +67,7 @@ export default function RootLayout({
       lang="fa"
       dir="rtl"
       data-scroll-behavior="smooth"
-      className={`${yekanBakh.variable} ${inter.variable} ${geistMono.variable}`}
+      className={`${yekanBakh.variable} ${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased min-h-screen flex flex-col">

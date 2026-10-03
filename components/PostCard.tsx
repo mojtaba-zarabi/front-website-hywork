@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ImageWithFallback from './ImageWithFallback';
@@ -41,6 +42,15 @@ export default function PostCard({
   sellerId,
 }: PostCardProps) {
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const getDisplayImage = () => {
     if (images && Array.isArray(images) && images.length > 0) return images[0];
     return '/images/posts/placeholder.svg';
@@ -86,40 +96,37 @@ export default function PostCard({
     { label: 'گزارش', icon: '🚫', onClick: handleReport },
   ];
 
-  // حالت فشرده (compact) - خانه‌ی شبکه‌ی سه‌ستونه‌ی فیگما (نتایج جستجو، پروفایل)
-  // تصویر مربعی، زیرش ۷۲ پیکسل سفید: عنوان ۱۰/۳۰۰، دسته ۶/۳۰۰ خاکستری، موجودی ۶/۴۰۰ قرمز، قیمت ۱۰/۴۰۰
+  // حالت فشرده (compact) - برای پروفایل کاربر
   if (compact) {
-    const lowStock = stock > 0 && stock <= 5;
     return (
-      <div className="bg-bg-card overflow-hidden cursor-pointer relative">
-        <div className="relative aspect-square overflow-hidden bg-placeholder">
+      <div className="bg-(--color-bg-card) overflow-hidden cursor-pointer relative">
+        <div className="relative aspect-square overflow-hidden bg-(--color-bg-surface)">
           <ImageWithFallback
             src={displayImage}
             alt={title}
             fallbackSrc="/images/posts/placeholder.svg"
             className="w-full h-full object-cover"
           />
+          {isService && (
+            <span className="absolute top-2 right-2 bg-green-500 text-white px-2.5 py-1 text-[11px] font-medium z-[2] rounded-full">
+              خدمات
+            </span>
+          )}
+          {stock === 0 && (
+            <span className="absolute top-2 left-2 bg-red-500 text-white px-2.5 py-1 text-[11px] font-medium z-[2] rounded-full">
+              ناموجود
+            </span>
+          )}
         </div>
-        <div className="relative h-18 px-1.5 pt-px text-right">
-          <h3 className="m-0 text-[10px] font-light leading-3 text-text-primary line-clamp-2" title={title}>
-            {title}
+        <div className="p-2">
+          <h3
+            className={`text-[13px] font-medium m-0 mb-1 text-(--color-text-primary) line-clamp-2 leading-tight min-h-[28px] sm:min-h-[32px]`}
+            title={title}
+          >
+            {truncateTitle(title, isMobile ? 30 : 35)}
           </h3>
-          {category && <p className="m-0 mt-px text-[6px] font-light leading-2 text-[#8d8d8d]">{category}</p>}
-          {stock === 0 ? (
-            <p className="m-0 text-[6px] leading-2 text-danger">ناموجود</p>
-          ) : lowStock ? (
-            <p className="m-0 text-[6px] leading-2 text-danger">{formattedStock} عدد موجود</p>
-          ) : null}
-          <div className="absolute bottom-2 inset-x-1.5 flex items-end justify-between">
-            <span className="text-[10px] leading-3 text-text-primary">{formattedPrice}</span>
-            {rating > 0 && (
-              <span className="flex items-center gap-px text-[4px] leading-none text-text-primary">
-                <svg viewBox="0 0 24 24" className="w-2 h-2" fill="currentColor" aria-hidden>
-                  <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z" />
-                </svg>
-                {formattedRating}
-              </span>
-            )}
+          <div className={`text-[14px] font-bold text-(--color-accent-color) ${isMobile ? 'text-[11px]' : ''}`}>
+            {formattedPrice} تومان
           </div>
         </div>
       </div>
@@ -200,10 +207,8 @@ export default function PostCard({
           </div>
           {rating > 0 && (
             <div className="flex items-center px-1.5">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>
-                <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z" />
-              </svg>
-              <span className="text-[11px] font-semibold text-text-primary">{formattedRating}</span>
+              <span className="text-[11px]">⭐</span>
+              <span className="text-[11px] font-semibold text-amber-500">{formattedRating}</span>
             </div>
           )}
         </div>

@@ -27,42 +27,25 @@
    با تعریفشون داخل @theme، هم به‌عنوان CSS variable در دسترسن، هم Tailwind
    می‌تونه در آینده ازشون یوتیلیتی بسازه (مثلاً اگه بخوای bg-primary هم اضافه کنی). */
 @theme {
-  /* پالت سیاه‌وسفید فیگما (nini) */
   --color-bg-primary: #ffffff;
-  --color-bg-secondary: #ffffff;
-  --color-bg-surface: #f5f5f5;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-surface: #f1f5f9;
   --color-bg-card: #ffffff;
-  --color-bg-hover: #eaeaea;
-  --color-bg-sheet: #1d1d1d;
-  --color-placeholder: #d9d9d9;
+  --color-bg-hover: #e2e8f0;
+  
+  --color-border-color: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  
+  --color-accent-color: #3b82f6;
+  --color-accent-hover: #2563eb;
+  
+  --color-shadow: rgba(0, 0, 0, 0.08);
 
-  --color-border-color: #cecece;
-  --color-border-light: #eaeaea;
-  --color-border-strong: #000000;
-
-  --color-text-primary: #000000;
-  --color-text-secondary: #868686;
-  --color-text-muted: #bdbdbd;
-
-  --color-accent-color: #000000;
-  --color-accent-hover: #1d1d1d;
-  --color-on-accent: #ffffff;
-
-  --color-danger: #ff0000;
-  --color-success: #12da00;
-  --color-online: #00cc07;
-  --color-warning: #ffcc00;
-  --color-warning-text: #ffa600;
-  --color-chart: #9787ff;
-
-  --color-shadow: rgba(34, 34, 34, 0.07);
-
-  --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 20px;
-
-  --font-sans: var(--font-inter), var(--font-yekan-bakh), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-yekan-bakh), var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 
   /* انیمیشن‌های سفارشی - Tailwind v4 خودش از این توکن‌ها یوتیلیتی animate-* می‌سازه */
@@ -77,28 +60,23 @@
    attribute پیروی کنه، نه از prefers-color-scheme. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* فیگما فقط تم روشن دارد؛ تم تیره همان پالت سیاه‌وسفید است که برعکس شده */
 [data-theme="dark"] {
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #000000;
-  --color-bg-surface: #1d1d1d;
-  --color-bg-card: #000000;
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #171717;
+  --color-bg-surface: #262626;
+  --color-bg-card: #1a1a1a;
   --color-bg-hover: #2a2a2a;
-  --color-bg-sheet: #1d1d1d;
-  --color-placeholder: #3a3a3a;
-
-  --color-border-color: #3a3a3a;
+  
+  --color-border-color: #3f3f46;
   --color-border-light: #2a2a2a;
-  --color-border-strong: #ffffff;
-
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #9e9e9e;
-  --color-text-muted: #6c6c6c;
-
-  --color-accent-color: #ffffff;
-  --color-accent-hover: #eaeaea;
-  --color-on-accent: #000000;
-
+  
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #6b7280;
+  
+  --color-accent-color: #60a5fa;
+  --color-accent-hover: #93bbfc;
+  
   --color-shadow: rgba(0, 0, 0, 0.4);
 }
 
@@ -147,6 +125,7 @@
 
   a:hover {
     color: var(--color-accent-hover);
+    text-decoration: underline;
   }
 
   input, textarea, select, button {
@@ -163,7 +142,7 @@
 
   ::selection {
     background: var(--color-accent-color);
-    color: var(--color-on-accent);
+    color: #ffffff;
   }
 
   ::-webkit-scrollbar {
@@ -186,10 +165,13 @@
     background: var(--color-text-secondary);
   }
 
-  /* جلوگیری از zoom خودکار iOS روی فوکوس اینپوت در موبایل.
-     اندازه‌ی پایه‌ی html عمداً ۱۶ پیکسل می‌ماند تا اندازه‌های پیکسلی فیگما (۴۴۰ پیکسل) دقیق باشند */
+  /* جلوگیری از zoom خودکار iOS روی فوکوس اینپوت در موبایل */
   @media (max-width: 640px) {
-    input, textarea, select {
+    html {
+      font-size: 14px;
+    }
+
+    input, textarea, select, button {
       font-size: 16px;
     }
   }
@@ -208,20 +190,20 @@
   }
 
   .btn-primary {
-    @apply bg-(--color-accent-color) text-(--color-on-accent) font-medium text-base py-3 px-6 rounded-xl transition-all duration-300;
+    @apply bg-(--color-accent-color) text-white font-bold py-3 px-6 rounded-lg transition-all duration-300;
   }
   .btn-primary:hover {
-    @apply bg-(--color-accent-hover);
+    @apply bg-(--color-accent-hover) -translate-y-px shadow-[0_4px_6px_-1px_var(--color-shadow)];
   }
   .btn-primary:disabled {
     @apply opacity-50 cursor-not-allowed translate-y-0;
   }
 
   .btn-secondary {
-    @apply bg-(--color-bg-primary) text-(--color-text-primary) border border-(--color-border-strong) font-medium text-base py-3 px-6 rounded-xl transition-all duration-300;
+    @apply bg-(--color-bg-surface) text-(--color-text-primary) font-bold py-3 px-6 rounded-lg transition-all duration-300;
   }
   .btn-secondary:hover {
-    @apply bg-(--color-bg-hover);
+    @apply bg-(--color-border-color) -translate-y-px;
   }
 
   .btn-success {
@@ -241,7 +223,7 @@
   .badge {
     @apply inline-block py-1 px-3 rounded-full text-xs font-semibold leading-none;
   }
-  .badge-blue   { @apply bg-bg-surface text-text-primary; }
+  .badge-blue   { @apply bg-blue-100 text-blue-800; }
   .badge-green  { @apply bg-green-100 text-green-800; }
   .badge-red    { @apply bg-red-100 text-red-800; }
   .badge-yellow { @apply bg-yellow-100 text-yellow-800; }

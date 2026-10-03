@@ -178,7 +178,7 @@ const PersianCalendar = ({
               aspect-square flex items-center justify-center text-sm rounded-lg cursor-pointer transition-all duration-200
               ${!day.isCurrentMonth ? 'cursor-default opacity-30 bg-transparent' : ''}
               ${day.isToday ? 'bg-(--color-bg-surface) border border-(--color-accent-color) font-semibold' : ''}
-              ${day.isSelected ? 'bg-(--color-accent-color) text-on-accent font-semibold shadow-[0_2px_6px_var(--color-shadow)]' : 'text-(--color-text-primary) bg-(--color-bg-secondary)'}
+              ${day.isSelected ? 'bg-(--color-accent-color) text-white font-semibold shadow-[0_2px_6px_var(--color-shadow)]' : 'text-(--color-text-primary) bg-(--color-bg-secondary)'}
               ${day.isCurrentMonth && !day.isSelected ? 'hover:bg-(--color-bg-surface) hover:scale-105' : ''}
             `}
           >
@@ -191,7 +191,7 @@ const PersianCalendar = ({
       <div className="flex justify-center px-5 pt-3 pb-5 border-t border-(--color-border-color) bg-(--color-bg-secondary)">
         <button 
           onClick={handleConfirm} 
-          className="w-full py-2.5 bg-(--color-accent-color) border-none rounded-xl text-sm font-semibold text-on-accent cursor-pointer transition-all duration-200 hover:bg-(--color-accent-hover) hover:-translate-y-0.5 hover:shadow-[0_4px_10px_var(--color-shadow)]"
+          className="w-full py-2.5 bg-(--color-accent-color) border-none rounded-xl text-sm font-semibold text-white cursor-pointer transition-all duration-200 hover:bg-(--color-accent-hover) hover:-translate-y-0.5 hover:shadow-[0_4px_10px_var(--color-shadow)]"
         >
           تایید
         </button>

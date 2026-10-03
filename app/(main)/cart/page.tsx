@@ -4,10 +4,8 @@
 import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
-import AppShell from '@/components/AppShell';
-import PageHeader from '@/components/PageHeader';
-import { Button, SegmentedTabs } from '@/components/FormControls';
+import Sidebar from '@/components/Sidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { toPersianNumber } from '@/utils/numberUtils';
 import { useToast } from '@/components/NotificationToast';
 
@@ -158,60 +156,96 @@ const CartItemComponent = ({
   onUpdateQuantity: (id: number, delta: number) => void;
   onRemove: (id: number) => void;
 }) => {
-  // کارت سفارش فیگما: ۴۰۸×۱۳۱، گوشه‌ی ۱۰، خط مشکی؛ تصویر ۱۰۰×۱۰۰ سمت راست
   return (
-    <div className="flex gap-4 p-4 rounded-[10px] border border-border-strong">
-      <div className="relative w-25 h-25 rounded-lg overflow-hidden shrink-0 bg-[#eff3f4]">
-        <Image src={item.image} alt={item.name} fill className="object-cover" sizes="100px" />
+    <div className="flex flex-wrap items-center gap-4 border-b border-border-color pb-4">
+      {/* تصویر محصول */}
+      <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          className="object-cover"
+          sizes="80px"
+        />
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <h4 className="m-0 text-sm font-semibold text-text-primary truncate">{item.name}</h4>
-        <div className="mt-1 text-xs text-text-primary">{toPersianNumber(item.price)} تومان</div>
-
-        <div className="mt-auto flex items-end justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onUpdateQuantity(item.id, 1)}
-              className="w-6 h-6 rounded-full border border-border-strong flex items-center justify-center text-text-primary"
-              aria-label="افزایش تعداد"
-            >
-              <AddPlusIcon className="w-3.5 h-3.5" />
-            </button>
-            <span className="min-w-5 text-center text-sm text-text-primary">{toPersianNumber(item.quantity)}</span>
-            <button
-              onClick={() => onUpdateQuantity(item.id, -1)}
-              className="w-6 h-6 rounded-full border border-border-strong flex items-center justify-center text-text-primary"
-              aria-label="کاهش تعداد"
-            >
-              <RemoveMinusIcon className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => onRemove(item.id)}
-              className="ms-1 text-danger flex items-center justify-center"
-              aria-label="حذف از سبد خرید"
-            >
-              <TrashFullIcon className="w-4.5 h-4.5" />
-            </button>
-          </div>
-          <div className="text-lg font-semibold text-text-primary whitespace-nowrap">
-            {toPersianNumber(item.price * item.quantity)}
-          </div>
+      {/* اطلاعات محصول */}
+      <div className="flex-1 min-w-40">
+        <h4 className="text-sm font-medium text-text-primary m-0">{item.name}</h4>
+        <div className="text-xs text-text-muted mt-1">
+          {toPersianNumber(item.price)} تومان
         </div>
+        
+        {/* کنترل‌های تعداد */}
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={() => onUpdateQuantity(item.id, -1)}
+            className="w-7 h-7 rounded border border-border-color bg-bg-secondary cursor-pointer flex items-center justify-center text-text-primary hover:bg-bg-surface transition-colors"
+            aria-label="کاهش تعداد"
+          >
+            <RemoveMinusIcon className="w-4 h-4" />
+          </button>
+          
+          <span className="min-w-7.5 text-center text-sm text-text-primary">
+            {toPersianNumber(item.quantity)}
+          </span>
+          
+          <button
+            onClick={() => onUpdateQuantity(item.id, 1)}
+            className="w-7 h-7 rounded border border-border-color bg-bg-secondary cursor-pointer flex items-center justify-center text-text-primary hover:bg-bg-surface transition-colors"
+            aria-label="افزایش تعداد"
+          >
+            <AddPlusIcon className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => onRemove(item.id)}
+            className="bg-transparent border-none cursor-pointer text-red-500 ml-3 flex items-center justify-center hover:opacity-70 transition-opacity"
+            aria-label="حذف از سبد خرید"
+          >
+            <TrashFullIcon className="w-4.5 h-4.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* قیمت کل */}
+      <div className="min-w-30 text-left font-bold text-sm text-text-primary sm:w-full sm:text-right sm:pr-17.5">
+        {toPersianNumber(item.price * item.quantity)} تومان
       </div>
     </div>
   );
 };
 
-// وضعیت سفارش به شکل کپسول کوچک فیگما (پرداخت‌نشده: زرد، تحویل‌شده: سبز، بقیه: خاکستری)
-const StatusPill = ({ status }: { status: string }) => {
-  const look =
-    status === ORDER_STATUS.DELIVERED
-      ? 'bg-success/15 text-success'
-      : status === ORDER_STATUS.PAID
-        ? 'bg-bg-surface text-text-primary'
-        : 'bg-[#ffe100] text-warning-text';
-  return <span className={`inline-flex items-center h-4.5 px-2.5 rounded-[9px] text-[10px] font-semibold ${look}`}>{status}</span>;
+/**
+ * کامپوننت دکمه‌های تب
+ */
+const TabButton = ({
+  label,
+  isActive,
+  onClick,
+  count,
+}: {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+  count?: number;
+}) => {
+  return (
+    <button
+      className={`px-5 py-3 bg-transparent border-none text-sm cursor-pointer font-medium transition-all ${
+        isActive
+          ? 'text-text-primary font-semibold border-b-2 border-text-primary'
+          : 'text-text-muted hover:text-text-primary'
+      }`}
+      onClick={onClick}
+      aria-label={label}
+      role="tab"
+      aria-selected={isActive}
+    >
+      {label}
+      {count !== undefined && ` (${toPersianNumber(count)})`}
+    </button>
+  );
 };
 
 // ============================================
@@ -477,9 +511,9 @@ export default function CartPage() {
     const total = getTotalPrice();
 
     return (
-      <div className="pt-8">
+      <div className="py-5">
         {/* لیست آیتم‌ها */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-5">
           {cartItems.map((item) => (
             <CartItemComponent
               key={item.id}
@@ -491,13 +525,19 @@ export default function CartPage() {
         </div>
 
         {/* جمع کل */}
-        <div className="mt-8 flex items-center justify-between h-14 px-4 rounded-xl border border-border-strong">
-          <span className="text-2xl text-text-primary">{toPersianNumber(total)}</span>
-          <span className="text-sm text-text-primary">مجموع (تومان)</span>
+        <div className="mt-5 text-left p-4 bg-bg-secondary rounded-lg border border-border-color sm:text-center">
+          <div className="text-lg font-bold mb-3 text-text-primary">
+            مجموع: {toPersianNumber(total)} تومان
+          </div>
+          
+          <button
+            onClick={handleCheckout}
+            className="bg-accent-color text-white border-none px-6 py-2.5 rounded-[40px] cursor-pointer text-base font-semibold transition-all hover:bg-accent-hover hover:-translate-y-0.5 sm:w-full sm:py-3"
+            aria-label="پرداخت و ثبت سفارش"
+          >
+            پرداخت و ثبت سفارش
+          </button>
         </div>
-        <Button onClick={handleCheckout} className="w-full mt-6" aria-label="پرداخت و ثبت سفارش">
-          پرداخت و ثبت سفارش
-        </Button>
       </div>
     );
   }, [cartItems, isLoading, updateQuantity, removeItem, getTotalPrice, handleCheckout]);
@@ -517,22 +557,27 @@ export default function CartPage() {
     }
 
     return (
-      <div className="pt-8 flex flex-col gap-3">
-        {orderHistory.map((order) => (
-          <Link
-            key={order.id}
-            href={`/orders/${order.id}`}
-            className="block p-4 rounded-[10px] border border-border-strong text-text-primary hover:text-text-primary"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold">سفارش #{toPersianNumber(order.id)}</span>
-              <StatusPill status={order.status} />
+      <div className="py-5">
+        {orderHistory.map((order) => {
+          const isDelivered = order.status === ORDER_STATUS.DELIVERED;
+          
+          return (
+            <div
+              key={order.id}
+              className="bg-bg-secondary p-4 rounded-lg mb-4 border border-border-color text-text-primary"
+            >
+              <div className="flex justify-between font-bold mb-2 flex-wrap gap-2 text-text-primary">
+                <span>سفارش #{toPersianNumber(order.id)}</span>
+                <span>{order.date}</span>
+                <span style={{ color: isDelivered ? '#4caf50' : '#ff9800' }}>
+                  {order.status}
+                </span>
+              </div>
+              <div>محصولات: {order.items.join(' - ')}</div>
+              <div>مبلغ کل: {toPersianNumber(order.total)} تومان</div>
             </div>
-            <div className="mt-1 text-[10px] text-text-secondary">{order.date}</div>
-            <p className="m-0 mt-3 text-xs">{order.items.join(' - ')}</p>
-            <div className="mt-3 text-lg font-semibold text-left">{toPersianNumber(order.total)}</div>
-          </Link>
-        ))}
+          );
+        })}
       </div>
     );
   }, [orderHistory]);
@@ -552,19 +597,21 @@ export default function CartPage() {
     }
 
     return (
-      <div className="pt-8 flex flex-col gap-3">
+      <div className="py-5">
         {salesItems.map((sale) => (
-          <div key={sale.id} className="p-4 rounded-[10px] border border-border-strong text-text-primary">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold truncate">{sale.product}</span>
-              <StatusPill status={sale.status} />
+          <div
+            key={sale.id}
+            className="bg-bg-secondary p-4 rounded-lg mb-4 border border-border-color text-text-primary"
+          >
+            <div className="flex justify-between font-bold mb-2 flex-wrap gap-2 text-text-primary">
+              <span>{sale.product}</span>
+              <span>{sale.date}</span>
             </div>
-            <div className="mt-1 text-[10px] text-text-secondary">
-              {sale.date} | {sale.buyer}
+            <div>
+              تعداد: {toPersianNumber(sale.quantity)} | قیمت واحد: {toPersianNumber(sale.price)} تومان
             </div>
-            <div className="mt-3 flex items-end justify-between">
-              <span className="text-xs">تعداد: {toPersianNumber(sale.quantity)}</span>
-              <span className="text-lg font-semibold">{toPersianNumber(sale.price * sale.quantity)}</span>
+            <div>
+              خریدار: {sale.buyer} | وضعیت: {sale.status}
             </div>
           </div>
         ))}
@@ -585,26 +632,60 @@ export default function CartPage() {
   });
 
   return (
-    <AppShell>
-      <PageHeader title="سبد خرید" />
-      <div className="px-4 pb-8">
-        <SegmentedTabs
-          className="mt-4.5"
-          value={activeTab}
-          onChange={setActiveTab}
-          tabs={[
-            { value: TABS.CART, label: `سبد (${toPersianNumber(cartItems.length)})` },
-            { value: TABS.HISTORY, label: 'تاریخچه سفارش‌ها' },
-            { value: TABS.SALES, label: 'فروش‌ها' },
-          ]}
-        />
-        <div role="tabpanel">
-          {activeTab === TABS.CART && renderCart()}
-          {activeTab === TABS.HISTORY && renderHistory()}
-          {activeTab === TABS.SALES && renderSales()}
+    <>
+      {/* نوار کناری و ناوبری موبایل */}
+      {!isMobile && <Sidebar />}
+      {isMobile && <MobileBottomNav />}
+
+      {/* محتوای اصلی */}
+      <div className={`min-h-screen overflow-y-auto p-5 box-border bg-bg-primary ${isMobile ? 'ms-0 p-4 mb-0' : ''}`}>
+        <div className="max-w-250 mx-auto">
+          {/* عنوان صفحه */}
+          <h1 className="text-2xl font-bold text-text-primary mb-6">سبد خرید</h1>
+
+          {/* تب‌ها */}
+          <div 
+            className="flex border-b border-border-color mb-5 gap-2.5 flex-wrap"
+            role="tablist"
+          >
+            <TabButton
+              label="سبد خرید"
+              isActive={activeTab === TABS.CART}
+              onClick={() => {
+                console.log('🔄 تغییر تب به سبد خرید');
+                setActiveTab(TABS.CART);
+              }}
+              count={cartItems.length}
+            />
+            
+            <TabButton
+              label="تاریخچه سفارشات"
+              isActive={activeTab === TABS.HISTORY}
+              onClick={() => {
+                console.log('🔄 تغییر تب به تاریخچه سفارشات');
+                setActiveTab(TABS.HISTORY);
+              }}
+            />
+            
+            <TabButton
+              label="فروش‌ها"
+              isActive={activeTab === TABS.SALES}
+              onClick={() => {
+                console.log('🔄 تغییر تب به فروش‌ها');
+                setActiveTab(TABS.SALES);
+              }}
+            />
+          </div>
+
+          {/* محتوای تب‌ها */}
+          <div role="tabpanel">
+            {activeTab === TABS.CART && renderCart()}
+            {activeTab === TABS.HISTORY && renderHistory()}
+            {activeTab === TABS.SALES && renderSales()}
+          </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }
 

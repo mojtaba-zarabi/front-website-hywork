@@ -237,10 +237,10 @@ export default function DateRangePicker({
     }
 
     if (day.isStart) {
-      classes += 'bg-accent-color text-on-accent rounded-l-lg ';
+      classes += 'bg-accent-color text-white rounded-l-lg ';
     }
     if (day.isEnd) {
-      classes += 'bg-accent-color text-on-accent rounded-r-lg ';
+      classes += 'bg-accent-color text-white rounded-r-lg ';
     }
     if (day.isInRange && !day.isStart && !day.isEnd) {
       classes += 'bg-bg-surface rounded-none ';
@@ -381,7 +381,7 @@ export default function DateRangePicker({
                       key={hour}
                       onClick={() => setStartTime({ ...startTime, hour })}
                       className={`w-full py-1.5 text-center border-none bg-transparent cursor-pointer rounded-md text-xs transition-all duration-150 ${
-                        startTime.hour === hour ? 'bg-accent-color text-on-accent' : 'text-text-primary hover:bg-bg-surface'
+                        startTime.hour === hour ? 'bg-accent-color text-white' : 'text-text-primary hover:bg-bg-surface'
                       }`}
                     >
                       {toPersianNumber(hour.toString().padStart(2, '0'))}
@@ -394,7 +394,7 @@ export default function DateRangePicker({
                       key={min}
                       onClick={() => setStartTime({ ...startTime, minute: min })}
                       className={`w-full py-1.5 text-center border-none bg-transparent cursor-pointer rounded-md text-xs transition-all duration-150 ${
-                        startTime.minute === min ? 'bg-accent-color text-on-accent' : 'text-text-primary hover:bg-bg-surface'
+                        startTime.minute === min ? 'bg-accent-color text-white' : 'text-text-primary hover:bg-bg-surface'
                       }`}
                     >
                       {toPersianNumber(min.toString().padStart(2, '0'))}
@@ -414,7 +414,7 @@ export default function DateRangePicker({
                       key={hour}
                       onClick={() => setEndTime({ ...endTime, hour })}
                       className={`w-full py-1.5 text-center border-none bg-transparent cursor-pointer rounded-md text-xs transition-all duration-150 ${
-                        endTime.hour === hour ? 'bg-accent-color text-on-accent' : 'text-text-primary hover:bg-bg-surface'
+                        endTime.hour === hour ? 'bg-accent-color text-white' : 'text-text-primary hover:bg-bg-surface'
                       }`}
                     >
                       {toPersianNumber(hour.toString().padStart(2, '0'))}
@@ -427,7 +427,7 @@ export default function DateRangePicker({
                       key={min}
                       onClick={() => setEndTime({ ...endTime, minute: min })}
                       className={`w-full py-1.5 text-center border-none bg-transparent cursor-pointer rounded-md text-xs transition-all duration-150 ${
-                        endTime.minute === min ? 'bg-accent-color text-on-accent' : 'text-text-primary hover:bg-bg-surface'
+                        endTime.minute === min ? 'bg-accent-color text-white' : 'text-text-primary hover:bg-bg-surface'
                       }`}
                     >
                       {toPersianNumber(min.toString().padStart(2, '0'))}
@@ -450,7 +450,7 @@ export default function DateRangePicker({
         </button>
         <button
           onClick={handleConfirm}
-          className="flex-1 px-2 py-2 bg-accent-color border-none rounded-[30px] text-xs font-semibold text-on-accent cursor-pointer transition-all hover:bg-accent-hover hover:-translate-y-0.5"
+          className="flex-1 px-2 py-2 bg-accent-color border-none rounded-[30px] text-xs font-semibold text-white cursor-pointer transition-all hover:bg-accent-hover hover:-translate-y-0.5"
         >
           تایید
         </button>

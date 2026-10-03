@@ -1,13 +1,9 @@
 // src/app/(main)/create-post/page.tsx
 'use client';
 
-import { useState, useContext, useSyncExternalStore, useCallback, useMemo } from 'react';
-import AppShell from '@/components/AppShell';
-import PageHeader from '@/components/PageHeader';
-import BottomSheet, { SheetActions } from '@/components/BottomSheet';
-import { Button, OptionRow, TextField } from '@/components/FormControls';
-import { SearchIcon, ImageIcon, HashIcon, LayersIcon, CloseIcon } from '@/components/icons';
-import { toPersianNumber } from '@/utils/numberUtils';
+import { useState, useContext, useEffect, useRef, useLayoutEffect, useSyncExternalStore, useCallback, useMemo } from 'react';
+import Sidebar from '@/components/Sidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import DateRangePicker from '@/components/DateRangePicker';
 import Modal from '@/components/Modal';
 import { UserContext } from '@/contexts/UserContext';
@@ -73,28 +69,6 @@ const POST_TYPES = {
   SERVICE: 'service',
 } as const;
 
-/** فهرست نوع پست در فیگما (post type) */
-const TYPE_GROUPS = [
-  {
-    title: 'محصولات فیزیکی',
-    type: POST_TYPES.PRODUCT,
-    items: ['موبایل، تبلت، لپ‌تاپ', 'لباس، کفش، اکسسوری', 'لوازم خانگی', 'لوازم آشپزخانه', 'تجهیزات ورزشی', 'آرایشی و بهداشتی', 'قطعات خودرو', 'ابزار و یراق', 'اسباب‌بازی', 'غذای آماده'],
-  },
-  {
-    title: 'محصولات دیجیتال',
-    type: POST_TYPES.PRODUCT,
-    items: ['کتاب الکترونیکی', 'لایسنس نرم‌افزار', 'قالب‌های گرافیکی', 'موسیقی، ویدیو و صوت', 'دوره‌های آموزشی'],
-  },
-  {
-    title: 'خدمات',
-    type: POST_TYPES.SERVICE,
-    items: ['آرایشگری', 'ماساژ', 'مراقبت از سالمند و کودک', 'تعمیرات منزل', 'برق‌کاری', 'لوله‌کشی', 'نظافت', 'نقاشی ساختمان', 'تعمیر لوازم خانگی', 'برنامه‌نویسی', 'طراحی گرافیک', 'ترجمه', 'حسابداری', 'مشاوره', 'عکاسی', 'تدوین ویدیو', 'تدریس خصوصی'],
-  },
-];
-
-/** تگ‌های پیشنهادی (Tag & Keyword) */
-const TAG_OPTIONS = ['جدید', 'پرطرفدار', 'فروش ویژه', 'تخفیف', 'محدود', 'داغ', 'ویژه', 'آنلاین', 'دیجیتال', 'دست‌ساز', 'سفارشی', 'ارسال رایگان', 'اورجینال', 'هدیه'];
-
 // ============================================
 // هوک‌های سفارشی - استاندارد React 19
 // ============================================
@@ -132,6 +106,14 @@ const useMediaQuery = (query: string) => {
 // آیکون‌های SVG
 // ============================================
 
+const UploadIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
+
 const MapIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
@@ -145,6 +127,22 @@ const CalendarIcon = ({ className }: { className?: string }) => (
     <line x1="16" y1="2" x2="16" y2="6" />
     <line x1="8" y1="2" x2="8" y2="6" />
     <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const CalendarDaysIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
+  </svg>
+);
+
+const CaretDownIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="6 9 12 15 18 9" />
   </svg>
 );
 
@@ -184,6 +182,110 @@ interface Coordinates {
 // کامپوننت سلکت سفارشی
 // ============================================
 
+/**
+ * کامپوننت سلکت سفارشی با قابلیت جستجو و انتخاب
+ */
+const CustomSelect = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: {
+  options: SelectOption[];
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleSelect = useCallback((val: string) => {
+    console.log('📝 انتخاب گزینه:', { value: val });
+    onChange(val);
+    setIsOpen(false);
+  }, [onChange]);
+
+  // بستن dropdown هنگام کلیک خارج از آن
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // تنظیم موقعیت dropdown برای جلوگیری از خروج از صفحه
+  useLayoutEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight) {
+        dropdownRef.current.style.top = 'auto';
+        dropdownRef.current.style.bottom = '100%';
+        dropdownRef.current.style.marginTop = '0';
+        dropdownRef.current.style.marginBottom = '8px';
+      } else {
+        dropdownRef.current.style.top = '100%';
+        dropdownRef.current.style.bottom = 'auto';
+        dropdownRef.current.style.marginTop = '8px';
+        dropdownRef.current.style.marginBottom = '0';
+      }
+    }
+  }, [isOpen]);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  return (
+    <div ref={selectRef} className="relative w-full">
+      <div
+        onClick={() => {
+          console.log('🔄 تغییر وضعیت dropdown:', { isOpen: !isOpen });
+          setIsOpen(!isOpen);
+        }}
+        className={`flex items-center justify-between px-4 py-3 bg-bg-primary border rounded-2xl text-sm cursor-pointer transition-all duration-200 text-text-primary ${
+          isOpen ? 'border-accent-color shadow-[0_0_0_2px_rgba(59,130,246,0.2)]' : 'border-border-color'
+        }`}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
+      >
+        <span>{selectedOption ? selectedOption.label : placeholder}</span>
+        <span className={`inline-flex transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+          <CaretDownIcon className="w-4.5 h-4.5 text-text-muted" />
+        </span>
+      </div>
+      {isOpen && (
+        <div
+          ref={dropdownRef}
+          className="absolute left-0 right-0 bg-bg-card border border-border-color rounded-xl shadow-lg z-100 overflow-hidden mt-2"
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => handleSelect(opt.value)}
+              className={`px-4 py-2.5 text-sm cursor-pointer transition-colors duration-150 text-text-primary ${
+                opt.value === value ? 'bg-bg-surface' : 'hover:bg-bg-surface'
+              }`}
+              role="option"
+              aria-selected={opt.value === value}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ============================================
 // کامپوننت Loader
@@ -256,17 +358,6 @@ export default function CreatePostPage() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempAddress, setTempAddress] = useState('');
 
-  // مراحل و شیت‌های فیگما
-  const [step, setStep] = useState<'type' | 'media' | 'details'>('type');
-  const [sheet, setSheet] = useState<null | 'alt' | 'tags' | 'unit' | 'discount' | 'info'>(null);
-  const [typeQuery, setTypeQuery] = useState('');
-  const [mediaKind, setMediaKind] = useState<'photo' | 'video' | 'file'>('photo');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagQuery, setTagQuery] = useState('');
-  const [features, setFeatures] = useState<{ key: string; value: string }[]>([]);
-  const [featureKey, setFeatureKey] = useState('');
-  const [featureValue, setFeatureValue] = useState('');
-
   // ============================================
   // داده‌های ثابت با useMemo
   // ============================================
@@ -276,7 +367,20 @@ export default function CreatePostPage() {
     [currentUser?.addresses]
   );
 
+  const categoryOptions: SelectOption[] = useMemo(() => [
+    { value: '', label: 'انتخاب کنید' },
+    { value: 'الکترونیک', label: 'الکترونیک' },
+    { value: 'مد و پوشاک', label: 'مد و پوشاک' },
+    { value: 'کتاب', label: 'کتاب' },
+    { value: 'خانه و آشپزخانه', label: 'خانه و آشپزخانه' },
+    { value: 'ورزشی', label: 'ورزشی' },
+    { value: 'خدمات', label: 'خدمات' },
+  ], []);
 
+  const postTypeOptions: SelectOption[] = useMemo(() => [
+    { value: POST_TYPES.PRODUCT, label: 'محصول' },
+    { value: POST_TYPES.SERVICE, label: 'خدمت' },
+  ], []);
 
   const unitOptions: SelectOption[] = useMemo(() => [
     { value: '', label: 'انتخاب کنید' },
@@ -408,7 +512,13 @@ export default function CreatePostPage() {
   /**
    * تغییر اسلاید
    */
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % previews.length);
+  }, [previews.length]);
 
+  const prevSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + previews.length) % previews.length);
+  }, [previews.length]);
 
   // ============================================
   // مدیریت بازه‌های زمانی
@@ -570,8 +680,6 @@ export default function CreatePostPage() {
       imagesCount: images.length,
       dateRange: selectedDateRange,
       discountDateRange: discountDateRange,
-      tags,
-      features,
     };
 
     console.log('✅ داده‌های پست:', postData);
@@ -600,7 +708,7 @@ export default function CreatePostPage() {
   }, [
     title, description, price, discountPrice, category, stock,
     postType, altText, userLocation, unit, selectedLocationCoords,
-    images.length, selectedDateRange, discountDateRange, tags, features,
+    images.length, selectedDateRange, discountDateRange,
     validateForm, success
   ]);
 
@@ -653,395 +761,327 @@ export default function CreatePostPage() {
   // رندر
   // ============================================
 
-  const filteredTypes = TYPE_GROUPS.map((g) => ({
-    ...g,
-    items: g.items.filter((it) => it.includes(typeQuery.trim())),
-  })).filter((g) => g.items.length > 0);
-
-  const pickType = (type: string, label: string) => {
-    setPostType(type);
-    if (!category) setCategory(label);
-    setStep('media');
-  };
-
-  const filteredTags = TAG_OPTIONS.filter((t) => t.includes(tagQuery.trim()));
-
-  // ============================================
-  // رندر - فیگما (create post): نوع پست ← تصاویر و ویدیو ← عنوان، توضیح و گزینه‌ها
-  // ============================================
   return (
-    <AppShell>
-      {step === 'type' && (
-        <>
-          <PageHeader title="نوع پست" />
-          <div className="px-4 pb-10">
-            <label className="flex items-center gap-3 h-12.5 px-4 rounded-[10px] border border-border-strong">
-              <SearchIcon className="w-4 h-4 shrink-0" />
-              <input
-                value={typeQuery}
-                onChange={(e) => setTypeQuery(e.target.value)}
-                placeholder="جستجو"
-                aria-label="جستجوی نوع پست"
-                className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm text-text-primary placeholder:text-placeholder"
-              />
-            </label>
-            {filteredTypes.map((g) => (
-              <section key={g.title} className="mt-5">
-                <h2 className="m-0 mb-1 text-[10px] font-semibold text-text-primary">{g.title}</h2>
-                <ul className="list-none m-0 p-0">
-                  {g.items.map((it) => (
-                    <li key={it}>
+    <>
+      {/* نوار کناری و ناوبری موبایل */}
+      {!isMobile && <Sidebar />}
+      {isMobile && <MobileBottomNav />}
+
+      {/* محتوای اصلی */}
+      <div className="h-screen overflow-y-auto p-5 md:p-10 bg-bg-primary">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-wrap gap-6 md:gap-10 max-w-7xl mx-auto bg-bg-secondary rounded-2xl p-4 md:p-8 border border-border-color shadow-[0_4px_20px_var(--color-shadow)]"
+        >
+          {/* ستون راست - آپلود تصاویر */}
+          <div className="flex-1 min-w-70">
+            <div className="aspect-square border-2 border-dashed border-border-color rounded-2xl bg-bg-primary overflow-hidden relative hover:border-accent-color transition-colors">
+              {previews.length > 0 ? (
+                <div className="relative w-full h-full flex items-center justify-center bg-black">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previews[currentIndex]}
+                    alt={`تصویر ${currentIndex + 1}`}
+                    className="w-full h-full object-contain"
+                  />
+                  
+                  {/* دکمه حذف */}
+                  <button
+                    type="button"
+                    className="absolute top-3 right-3 bg-black/60 text-white border-none rounded-full w-8 h-8 text-lg cursor-pointer z-10 flex items-center justify-center hover:bg-black/80 transition-colors"
+                    onClick={() => removeImage(currentIndex)}
+                    aria-label="حذف تصویر"
+                  >
+                    ✕
+                  </button>
+
+                  {/* دکمه‌های اسلاید */}
+                  {previews.length > 1 && (
+                    <>
                       <button
                         type="button"
-                        onClick={() => pickType(g.type, it)}
-                        className="w-full h-6 text-right text-[10px] text-text-primary hover:font-semibold"
+                        className="absolute top-1/2 -translate-y-1/2 left-2 bg-black/50 text-white border-none rounded-full w-9 h-9 text-2xl cursor-pointer z-10 flex items-center justify-center hover:bg-black/70 transition-colors"
+                        onClick={prevSlide}
+                        aria-label="تصویر قبلی"
                       >
-                        {it}
+                        ‹
                       </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        </>
-      )}
+                      <button
+                        type="button"
+                        className="absolute top-1/2 -translate-y-1/2 right-2 bg-black/50 text-white border-none rounded-full w-9 h-9 text-2xl cursor-pointer z-10 flex items-center justify-center hover:bg-black/70 transition-colors"
+                        onClick={nextSlide}
+                        aria-label="تصویر بعدی"
+                      >
+                        ›
+                      </button>
+                    </>
+                  )}
 
-      {step === 'media' && (
-        <>
-          <PageHeader
-            title="تصاویر و ویدیو"
-            onBack={() => setStep('type')}
-            end={
-              <button type="button" onClick={() => setStep('details')} className="text-lg text-[#0a0a0a]">
-                بعدی
-              </button>
-            }
-          />
-          {/* پیش‌نمایش بزرگ تصویر انتخاب‌شده */}
-          <div className="relative w-full aspect-[440/322] bg-bg-surface flex items-center justify-center">
-            {previews[currentIndex] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={previews[currentIndex]} alt="" className="w-full h-full object-contain" />
-            ) : (
-              <ImageIcon className="w-35 h-35 text-placeholder" />
-            )}
-          </div>
-          {/* گالری سه‌ستونه با دکمه‌ی افزودن */}
-          <div className="relative grid grid-cols-3 gap-px bg-[#f2f2f2] min-h-80">
-            {previews.map((src, i) => (
-              <div key={i} className="relative aspect-square bg-bg-primary">
-                <button type="button" onClick={() => setCurrentIndex(i)} className="block w-full h-full" aria-label={`تصویر ${i + 1}`}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  aria-label="حذف تصویر"
-                  className="absolute top-2 left-2 w-6 h-6 rounded-full bg-black text-white flex items-center justify-center"
-                >
-                  <TrashIcon className="w-3 h-3" />
-                </button>
-                {i === currentIndex && <span className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-black border-2 border-white" />}
-              </div>
-            ))}
-            {previews.length < MAX_IMAGES && (
-              <label className="aspect-square bg-bg-primary flex items-center justify-center cursor-pointer text-placeholder">
-                <PlusIcon className="w-10 h-10" />
-                <input
-                  type="file"
-                  accept={mediaKind === 'video' ? 'video/*' : mediaKind === 'file' ? '*/*' : 'image/*'}
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  aria-label="افزودن رسانه"
-                />
-              </label>
-            )}
-            {/* انتخاب نوع رسانه: کپسول مشکی */}
-            <div className="sticky bottom-20 col-span-3 flex justify-center pointer-events-none">
-              <div className="pointer-events-auto flex items-center gap-1 h-12.5 px-3 rounded-full bg-black text-white text-sm">
-                {(['photo', 'video', 'file'] as const).map((k) => (
+                  {/* شمارنده */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-xs z-10">
+                    {currentIndex + 1} / {previews.length}
+                  </div>
+
+                  {/* دکمه افزودن تصویر */}
                   <button
-                    key={k}
                     type="button"
-                    onClick={() => setMediaKind(k)}
-                    aria-pressed={mediaKind === k}
-                    className={`h-9 px-4 rounded-full ${mediaKind === k ? 'bg-white text-black' : ''}`}
+                    className="absolute bottom-3 right-3 bg-black/50 text-white border-none rounded-full w-9 h-9 text-2xl font-light cursor-pointer z-10 flex items-center justify-center transition-colors hover:bg-black/70"
+                    onClick={() => document.getElementById('imageInput')?.click()}
+                    aria-label="افزودن تصویر"
                   >
-                    {k === 'photo' ? 'عکس' : k === 'video' ? 'ویدیو' : 'فایل'}
+                    +
                   </button>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div
+                  className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center text-text-muted hover:bg-bg-surface transition-colors"
+                  onClick={() => document.getElementById('imageInput')?.click()}
+                >
+                  <UploadIcon className="w-12 h-12 text-text-muted" />
+                  <p className="mt-3 text-sm font-medium text-text-primary">
+                    برای بارگذاری تصاویر کلیک کنید (چند عکس)
+                  </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    حداکثر ۱۰ عکس - هر عکس حداکثر ۵ مگابایت
+                  </p>
+                </div>
+              )}
+              <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+
+            {/* متن جایگزین */}
+            <div className="mt-4">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">
+                متن جایگزین (Alt) برای تصاویر
+              </label>
+              <input
+                type="text"
+                value={altText}
+                onChange={(e) => setAltText(e.target.value)}
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary"
+                placeholder="توضیح مختصر برای تصاویر (بهبود سئو)"
+              />
             </div>
           </div>
-        </>
-      )}
 
-      {step === 'details' && (
-        <form onSubmit={handleSubmit} noValidate>
-          <PageHeader
-            title="ساخت پست"
-            onBack={() => setStep('media')}
-            end={
-              <button type="submit" className="text-lg text-[#0a0a0a]">
-                انتشار
-              </button>
-            }
-          />
-
-          {/* شبکه‌ی رسانه‌ها ۱۴۷ پیکسلی با خط #f2f2f2 */}
-          <div className="grid grid-cols-3">
-            {Array.from({ length: Math.max(3, Math.ceil((previews.length + 1) / 3) * 3) }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setStep('media')}
-                className="aspect-square border border-[#f2f2f2] bg-bg-primary flex items-center justify-center"
-                aria-label={previews[i] ? `تصویر ${i + 1}` : 'افزودن تصویر'}
-              >
-                {previews[i] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={previews[i]} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <ImageIcon className="w-14 h-14 text-placeholder" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="px-4 pb-12">
-            <span className="block mt-6.5 mb-4 text-base text-text-primary">نوع پست</span>
-            <button
-              type="button"
-              onClick={() => setStep('type')}
-              className="w-full h-12.5 rounded-[10px] border border-border-strong text-lg text-text-primary"
-            >
-              {postType === POST_TYPES.SERVICE ? 'خدمت' : 'محصول'} · {category || 'انتخاب دسته‌بندی'}
-            </button>
-
-            <label className="block mt-4">
-              <span className="block mb-6.5 text-base text-text-primary">عنوان</span>
+          {/* ستون چپ - اطلاعات */}
+          <div className="flex-1 min-w-70">
+            {/* عنوان */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">
+                عنوان محصول / خدمت
+              </label>
               <input
+                type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                aria-label="عنوان"
-                className="w-full h-12.5 px-4 rounded-xl border border-border-strong bg-bg-primary text-base text-text-primary outline-none focus:border-2"
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary"
+                placeholder="مثلاً: خدمات طراحی سایت"
+                required
               />
-            </label>
+            </div>
 
-            <label className="block mt-8">
-              <span className="block mb-3.5 text-base text-text-primary">توضیحات</span>
-              <span className="block rounded-xl border border-border-strong overflow-hidden">
-                <span className="flex items-center gap-3 h-9 px-3 border-b border-border-color text-text-primary" aria-hidden>
-                  <span className="text-[10px]">عنوان ۲</span>
-                  <b className="text-sm">B</b>
-                  <i className="text-sm">I</i>
-                  <span className="text-xs">⁝≡</span>
-                </span>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  aria-label="توضیحات"
-                  className="w-full h-40 p-3 bg-transparent border-none outline-none resize-none text-sm text-text-primary"
+            {/* دسته‌بندی */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">دسته‌بندی</label>
+              <CustomSelect
+                options={categoryOptions}
+                value={category}
+                onChange={setCategory}
+                placeholder="انتخاب کنید"
+              />
+            </div>
+
+            {/* نوع پست */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">نوع پست</label>
+              <CustomSelect
+                options={postTypeOptions}
+                value={postType}
+                onChange={setPostType}
+                placeholder="انتخاب کنید"
+              />
+            </div>
+
+            {/* قیمت */}
+            <div className="flex flex-col md:flex-row gap-4 mb-5">
+              <div className="flex-1">
+                <label className="block mb-2 font-semibold text-sm text-text-primary">
+                  قیمت (تومان)
+                </label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary"
+                  placeholder="مثلا 1250000"
+                  required
                 />
-              </span>
-            </label>
+              </div>
+              <div className="flex-1">
+                <label className="block mb-2 font-semibold text-sm text-text-primary">
+                  قیمت تخفیف دار (تومان)
+                </label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="number"
+                    value={discountPrice}
+                    onChange={(e) => setDiscountPrice(e.target.value)}
+                    className="flex-1 px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary"
+                    placeholder="قیمت با تخفیف"
+                  />
+                  <button
+                    type="button"
+                    className="px-4 py-3 bg-bg-surface border border-border-color rounded-2xl cursor-pointer transition-colors hover:bg-border-color text-text-primary"
+                    onClick={() => setShowDiscountDateRangePicker(true)}
+                    title="انتخاب بازه زمانی تخفیف"
+                    aria-label="انتخاب بازه تخفیف"
+                  >
+                    <CalendarDaysIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                {discountDateRange && (
+                  <div className="flex items-center justify-between gap-2 mt-2 bg-green-500/15 rounded-xl border border-green-500/30 px-3 py-2">
+                    <span className="text-xs text-green-500 truncate">
+                      {formatPersianDateRange(discountDateRange)}
+                    </span>
+                    <button
+                      type="button"
+                      className="bg-transparent border-none cursor-pointer px-2 py-1 rounded-lg transition-colors hover:bg-green-500/20 text-green-500"
+                      onClick={() => setDiscountDateRange(null)}
+                      aria-label="حذف بازه تخفیف"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
-            <div className="mt-14 flex flex-col gap-3">
-              <OptionRow icon={<ImageIcon className="w-5 h-5" />} label="نوشتن متن جایگزین" value={altText} onClick={() => setSheet('alt')} />
-              <OptionRow
-                icon={<CalendarIcon className="w-4 h-4.5" />}
-                label="زمان‌بندی پست"
-                value={selectedDateRange ? formatPersianDateRange(selectedDateRange) : ''}
-                onClick={() => setShowDateRangePicker(true)}
-              />
-              <OptionRow icon={<HashIcon className="w-4 h-4" />} label="تگ و کلمه‌ی کلیدی" value={tags.join('، ')} onClick={() => setSheet('tags')} />
-              <OptionRow icon={<MapIcon className="w-5 h-5" />} label="آدرس" value={userLocation} onClick={() => setShowLocationModal(true)} />
-              <OptionRow
-                icon={<LayersIcon className="w-5 h-5" />}
-                label="مشخصات"
-                value={features.length ? `${toPersianNumber(features.length)} ویژگی` : ''}
-                onClick={() => setSheet('info')}
+            {/* واحد */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">واحد</label>
+              <CustomSelect
+                options={unitOptions}
+                value={unit}
+                onChange={setUnit}
+                placeholder="انتخاب کنید"
               />
             </div>
 
-            <h2 className="m-0 mt-10 mb-4 text-lg font-medium text-text-primary">قیمت و موجودی</h2>
-            <div className="flex flex-col gap-3">
-              <TextField type="number" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="قیمت (تومان)" aria-label="قیمت" />
-              <TextField type="number" inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="موجودی / ظرفیت" aria-label="موجودی" />
-              <OptionRow label="واحد" value={unit} onClick={() => setSheet('unit')} />
-              <OptionRow
-                label="تخفیف زمان‌دار"
-                value={discountPrice ? `${toPersianNumber(discountPrice)} تومان` : ''}
-                onClick={() => setSheet('discount')}
+            {/* موجودی */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">
+                موجودی / ظرفیت
+              </label>
+              <input
+                type="number"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary"
+                placeholder="تعداد در انبار یا ظرفیت باقیمانده"
+                required
               />
             </div>
 
-            <div className="mt-10 flex gap-5">
-              <Button type="submit" className="flex-1">انتشار</Button>
-              <Button variant="outline" className="flex-1" onClick={handleCancel}>پاک کردن</Button>
+            {/* لوکیشن */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">لوکیشن</label>
+              <div
+                className="flex items-center gap-3 px-4 py-3 bg-bg-surface border border-border-color rounded-2xl cursor-pointer transition-colors hover:bg-border-color text-text-primary"
+                onClick={() => setShowLocationModal(true)}
+                role="button"
+                tabIndex={0}
+                aria-label="انتخاب لوکیشن"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowLocationModal(true);
+                  }
+                }}
+              >
+                <MapIcon className="w-5 h-5" />
+                <span>{userLocation || 'انتخاب لوکیشن از آدرس‌ها'}</span>
+              </div>
+            </div>
+
+            {/* بازه زمانی */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">
+                بازه ارائه خدمت
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={formatPersianDateRange(selectedDateRange)}
+                  placeholder="انتخاب بازه تاریخ و زمان"
+                  readOnly
+                  className="flex-1 px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary cursor-pointer"
+                  onClick={() => setShowDateRangePicker(true)}
+                  aria-label="انتخاب بازه زمانی"
+                />
+                <button
+                  type="button"
+                  className="px-4 py-3 bg-bg-surface border border-border-color rounded-2xl cursor-pointer transition-colors hover:bg-border-color text-text-primary"
+                  onClick={() => setShowDateRangePicker(true)}
+                  aria-label="باز کردن تقویم"
+                >
+                  <CalendarIcon className="w-5 h-5" />
+                </button>
+              </div>
+              {selectedDateRange && (
+                <button
+                  type="button"
+                  className="mt-2 px-3 py-1 bg-red-500/15 text-red-500 border-none rounded-lg text-xs cursor-pointer transition-colors hover:bg-red-500/30"
+                  onClick={() => setSelectedDateRange(null)}
+                >
+                  حذف بازه
+                </button>
+              )}
+            </div>
+
+            {/* توضیحات */}
+            <div className="mb-5">
+              <label className="block mb-2 font-semibold text-sm text-text-primary">
+                توضیحات کامل
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all focus:border-accent-color focus:shadow-[0_0_0_2px_rgba(187,134,252,0.2)] bg-bg-primary text-text-primary resize-vertical"
+                rows={5}
+                placeholder="توضیحات کامل محصول یا خدمت را وارد کنید..."
+                required
+              />
+            </div>
+
+            {/* دکمه‌ها */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <button
+                type="submit"
+                className="flex-1 px-4 py-3 bg-accent-color text-white border-none rounded-4xl text-base font-semibold cursor-pointer transition-all text-center hover:bg-accent-hover hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={uploading}
+              >
+                {uploading ? 'در حال آپلود...' : 'ثبت پست'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 px-4 py-3 bg-bg-secondary text-text-primary border border-border-color rounded-4xl text-base font-semibold cursor-pointer transition-all text-center hover:bg-bg-surface"
+              >
+                انصراف
+              </button>
             </div>
           </div>
         </form>
-      )}
-
-      {/* شیت متن جایگزین: کنار هر تصویر یک کادر نوشتن (#424242) */}
-      <BottomSheet
-        open={sheet === 'alt'}
-        onClose={() => setSheet(null)}
-        title={<span className="text-xl font-normal">متن جایگزین</span>}
-        footer={<SheetActions onCancel={() => setSheet(null)} onConfirm={() => setSheet(null)} />}
-      >
-        <div className="flex flex-col gap-2">
-          {(previews.length ? previews : [null]).map((src, i) => (
-            <div key={i} className="flex gap-3.75">
-              <span className="w-25 h-25 shrink-0 bg-placeholder overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {src && <img src={src} alt="" className="w-full h-full object-cover" />}
-              </span>
-              <textarea
-                value={i === 0 ? altText : ''}
-                onChange={(e) => i === 0 && setAltText(e.target.value)}
-                placeholder="نوشتن..."
-                aria-label={`متن جایگزین تصویر ${i + 1}`}
-                className="flex-1 h-25 p-2.5 rounded-[10px] border border-[#424242] bg-transparent text-white text-sm placeholder:text-[#6b6b6b] outline-none resize-none"
-              />
-            </div>
-          ))}
-        </div>
-      </BottomSheet>
-
-      {/* شیت تگ‌ها (Tag & Keyword): جستجو + ردیف‌های دورخط، انتخاب‌شده سفید */}
-      <BottomSheet
-        open={sheet === 'tags'}
-        onClose={() => setSheet(null)}
-        title={<span className="text-xl font-normal">تگ و کلمه‌ی کلیدی</span>}
-        footer={<SheetActions onCancel={() => setSheet(null)} onConfirm={() => setSheet(null)} />}
-      >
-        <input
-          value={tagQuery}
-          onChange={(e) => setTagQuery(e.target.value)}
-          placeholder="جستجو"
-          aria-label="جستجوی تگ"
-          className="w-full h-12 px-4 mb-3 rounded-[10px] bg-white text-black text-sm outline-none"
-        />
-        <div className="flex flex-col gap-2">
-          {filteredTags.map((t) => {
-            const on = tags.includes(t);
-            return (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setTags(on ? tags.filter((x) => x !== t) : [...tags, t])}
-                className={`h-10 px-4 rounded-[10px] border text-right text-sm ${on ? 'bg-white text-black border-white' : 'border-white/60 text-white'}`}
-              >
-                {t}
-              </button>
-            );
-          })}
-        </div>
-      </BottomSheet>
-
-      {/* شیت واحد (unit) */}
-      <BottomSheet
-        open={sheet === 'unit'}
-        onClose={() => setSheet(null)}
-        title={<span className="text-xl font-normal">واحد</span>}
-        footer={<SheetActions onCancel={() => setSheet(null)} onConfirm={() => setSheet(null)} />}
-      >
-        <ul className="list-none m-0 p-0">
-          {unitOptions.filter((u) => u.value).map((u) => (
-            <li key={u.value}>
-              <button
-                type="button"
-                onClick={() => setUnit(u.value)}
-                aria-pressed={unit === u.value}
-                className={`w-full h-10 text-right text-base ${unit === u.value ? 'text-white font-semibold' : 'text-white/70'}`}
-              >
-                {u.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </BottomSheet>
-
-      {/* شیت تخفیف زمان‌دار (Limited-Time Discount) */}
-      <BottomSheet
-        open={sheet === 'discount'}
-        onClose={() => setSheet(null)}
-        title={<span className="text-xl font-normal">تخفیف زمان‌دار</span>}
-        footer={<SheetActions onCancel={() => setSheet(null)} onConfirm={() => setSheet(null)} />}
-      >
-        <input
-          type="number"
-          inputMode="numeric"
-          value={discountPrice}
-          onChange={(e) => setDiscountPrice(e.target.value)}
-          placeholder="قیمت با تخفیف (تومان)"
-          aria-label="قیمت با تخفیف"
-          className="w-full h-14 px-4 rounded-[10px] bg-white text-black text-base outline-none"
-        />
-        <button
-          type="button"
-          onClick={() => setShowDiscountDateRangePicker(true)}
-          className="mt-3 w-full h-14 px-4 rounded-[10px] border border-white text-right text-sm text-white"
-        >
-          {discountDateRange ? formatPersianDateRange(discountDateRange) : 'بازه‌ی زمانی تخفیف'}
-        </button>
-      </BottomSheet>
-
-      {/* شیت مشخصات (Information / Feature): کلید و مقدار */}
-      <BottomSheet
-        open={sheet === 'info'}
-        onClose={() => setSheet(null)}
-        title={<span className="text-xl font-normal">مشخصات</span>}
-        footer={<SheetActions onCancel={() => setSheet(null)} onConfirm={() => setSheet(null)} />}
-      >
-        <p className="m-0 mb-3 text-xs text-white/60">یک ویژگی موجود را جستجو کنید یا ویژگی جدید بسازید.</p>
-        <div className="flex gap-2 mb-4">
-          <input
-            value={featureKey}
-            onChange={(e) => setFeatureKey(e.target.value)}
-            placeholder="ویژگی (مثلاً رنگ)"
-            aria-label="نام ویژگی"
-            className="flex-1 min-w-0 h-12 px-3 rounded-[10px] bg-white text-black text-sm outline-none"
-          />
-          <input
-            value={featureValue}
-            onChange={(e) => setFeatureValue(e.target.value)}
-            placeholder="مقدار"
-            aria-label="مقدار ویژگی"
-            className="flex-1 min-w-0 h-12 px-3 rounded-[10px] bg-white text-black text-sm outline-none"
-          />
-          <button
-            type="button"
-            aria-label="افزودن ویژگی"
-            onClick={() => {
-              if (!featureKey.trim() || !featureValue.trim()) return;
-              setFeatures([...features, { key: featureKey.trim(), value: featureValue.trim() }]);
-              setFeatureKey('');
-              setFeatureValue('');
-            }}
-            className="w-12 h-12 rounded-[10px] border border-white text-white flex items-center justify-center"
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
-        </div>
-        <ul className="list-none m-0 p-0 flex flex-col gap-2">
-          {features.map((f, i) => (
-            <li key={i} className="flex items-center gap-3 h-9.5 px-4 rounded-[5px] bg-white text-black text-sm">
-              <span className="flex-1">{f.key}</span>
-              <span>{f.value}</span>
-              <button type="button" aria-label="حذف ویژگی" onClick={() => setFeatures(features.filter((_, j) => j !== i))}>
-                <CloseIcon className="w-3.5 h-3.5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </BottomSheet>
+      </div>
 
       {/* لودر */}
       {uploading && <Loader />}
@@ -1114,7 +1154,7 @@ export default function CreatePostPage() {
             <button
               type="button"
               onClick={handleAddAddress}
-              className="w-11.5 h-11.5 bg-accent-color text-on-accent border-none rounded-2xl cursor-pointer transition-colors flex items-center justify-center hover:bg-accent-hover"
+              className="w-11.5 h-11.5 bg-accent-color text-white border-none rounded-2xl cursor-pointer transition-colors flex items-center justify-center hover:bg-accent-hover"
               aria-label="افزودن آدرس"
             >
               <PlusIcon className="w-5 h-5" />
@@ -1171,7 +1211,7 @@ export default function CreatePostPage() {
           </div>
         </div>
       </Modal>
-    </AppShell>
+    </>
   );
 }
 

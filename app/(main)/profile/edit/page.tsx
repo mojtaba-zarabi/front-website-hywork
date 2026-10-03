@@ -4,16 +4,17 @@ import React, { useState, useEffect, useCallback, useRef, useContext } from 'rea
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import AppShell from '@/components/AppShell';
-import PageHeader from '@/components/PageHeader';
-import DateTimeSheet from '@/components/DateTimeSheet';
-import { Button } from '@/components/FormControls';
-import { CameraIcon, UserIcon } from '@/components/icons';
+import Sidebar from '@/components/Sidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import Modal from '@/components/Modal';
 import { useToast } from '@/components/NotificationToast';
 import { UserContext } from '@/contexts/UserContext';
 
 // ==================== DYNAMIC IMPORTS ====================
+const PersianCalendar = dynamic(
+  () => import('@/components/PersianCalendar'),
+  { ssr: false, loading: () => <div className="p-4 text-center text-text-secondary">در حال بارگذاری تقویم...</div> }
+);
 
 const MapComponent = dynamic(
   () => import('@/components/MapComponent'),
@@ -21,6 +22,13 @@ const MapComponent = dynamic(
 );
 
 // ==================== ICONS ====================
+const UploadIcon = () => (
+  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
 
 const LocationIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -391,168 +399,271 @@ export default function EditProfilePage() {
   // ==================== LOADING ====================
   if (isLoading || !isInitialized) {
     return (
-      <AppShell>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <div className="w-10 h-10 border-3 border-placeholder border-t-accent-color rounded-full animate-spin" />
-          <p className="text-text-secondary text-sm">در حال بارگذاری اطلاعات کاربری...</p>
+      <>
+        {!isMobile && <Sidebar />}
+        {isMobile && <MobileBottomNav />}
+        <div className="min-h-[calc(100vh-70px)] bg-bg-primary p-5 md:p-10">
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+            <div className="w-10 h-10 border-3 border-border-color border-t-accent-color rounded-full animate-spin" />
+            <p className="text-text-muted text-sm">در حال بارگذاری اطلاعات کاربری...</p>
+          </div>
         </div>
-      </AppShell>
+      </>
     );
   }
 
   if (!user) return null;
 
-  const fieldBox = 'w-full h-14 flex items-center gap-3 px-5 rounded-xl border border-border-strong bg-bg-primary text-right';
-  const fieldInput = 'flex-1 min-w-0 h-full bg-transparent border-none outline-none text-sm font-medium text-text-primary placeholder:text-text-primary';
-
   // ==================== RENDER ====================
-  // فیگما (Profile setting): آواتار ۱۴۷ پیکسلی خاکستری با دکمه‌ی دوربین مشکی ۴۱ پیکسلی،
-  // فیلدهای ۴۰۸×۵۶ با گوشه‌ی ۱۲ و برچسب ۱۴/۵۰۰ داخل فیلد، بیو ۱۳۹ پیکسلی
   return (
-    <AppShell>
-      <PageHeader title="تنظیمات پروفایل" />
+    <>
+      {!isMobile && <Sidebar />}
+      {isMobile && <MobileBottomNav />}
 
-      <form onSubmit={handleSubmit} className="px-4 pb-10" noValidate>
-        <div className="flex justify-center mt-12 mb-15.5">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="تغییر تصویر پروفایل"
-            className="relative w-36.75 h-36.75 rounded-full bg-[#f0f0f0] flex items-center justify-center"
-          >
-            {avatarPreview ? (
-              <Image src={avatarPreview} alt="" width={147} height={147} className="w-full h-full object-cover rounded-full" />
-            ) : (
-              <UserIcon className="w-19.5 h-19.5 text-[#aeaeae]" />
-            )}
-            <span className="absolute bottom-0 left-2 w-10.25 h-10.25 rounded-full bg-[#010101] text-[#fafafa] flex items-center justify-center">
-              <CameraIcon className="w-5 h-4.5" />
-            </span>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className={fieldBox}>
-            <span className="sr-only">نام کامل</span>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={fieldInput}
-              placeholder="نام و نام خانوادگی"
-              disabled={isSubmitting}
-              maxLength={100}
-            />
-          </label>
-
-          <div>
-            <label
-              className={`${fieldBox} ${
-                formData.username && !isUsernameValid ? '!border-danger' : formData.username && isUsernameValid ? '!border-success' : ''
-              }`}
+      <div className="min-h-[calc(100vh-70px)] bg-bg-primary overflow-x-hidden p-5 md:p-10 md:mb-0 mb-[70px] rtl">
+        <form onSubmit={handleSubmit} className="flex flex-wrap gap-10 max-w-[1000px] mx-auto bg-bg-secondary rounded-3xl p-8 md:p-6 sm:p-4 border border-border-color shadow-[0_4px_20px_var(--color-shadow)]">
+          
+          {/* Avatar Column */}
+          <div className="flex-1 min-w-[280px] md:min-w-[200px]">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+              className="aspect-square max-w-[280px] md:max-w-[200px] sm:max-w-[150px] mx-auto border-2 border-dashed border-border-color rounded-full flex flex-col items-center justify-center cursor-pointer bg-bg-surface overflow-hidden transition-all duration-300 hover:border-accent-color hover:bg-bg-secondary hover:scale-[1.02]"
             >
-              <span className="sr-only">نام کاربری</span>
+              {avatarPreview ? (
+                <Image
+                  src={avatarPreview}
+                  alt="آواتار"
+                  width={280}
+                  height={280}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <>
+                  <UploadIcon />
+                  <p className="mt-3 text-sm font-medium text-text-muted sm:text-xs sm:mt-2">آپلود آواتار</p>
+                </>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+
+          {/* Info Column */}
+          <div className="flex-1">
+            {/* ✅ Name Field - فقط یک فیلد و اختیاری */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">
+                نام کامل
+                <span className="text-text-muted text-xs mr-1">(اختیاری)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all bg-bg-primary text-text-primary text-right rtl focus:border-accent-color focus:shadow-[0_0_0_3px_rgba(187,134,252,0.2)] disabled:opacity-60 disabled:cursor-not-allowed sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl"
+                placeholder="نام و نام خانوادگی خود را وارد کنید (اختیاری)"
+                disabled={isSubmitting}
+                maxLength={100}
+              />
+              <p className="mt-1 text-xs text-text-muted text-right">
+                حداکثر ۱۰۰ کاراکتر
+              </p>
+            </div>
+
+            {/* Username with Validation */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">نام کاربری *</label>
               <input
                 type="text"
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
-                className={`${fieldInput} text-left`}
+                className={`w-full px-4 py-3 border rounded-2xl text-sm outline-none transition-all bg-bg-primary text-text-primary text-right rtl focus:shadow-[0_0_0_3px_rgba(187,134,252,0.2)] disabled:opacity-60 disabled:cursor-not-allowed sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl ${
+                  formData.username && !isUsernameValid 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : formData.username && isUsernameValid 
+                    ? 'border-green-500 focus:border-green-500' 
+                    : 'border-border-color focus:border-accent-color'
+                }`}
                 disabled={isSubmitting}
                 required
                 dir="ltr"
-                placeholder="نام کاربری"
+                placeholder="example_user"
               />
-            </label>
-            {formData.username && usernameErrors.length > 0 && (
-              <ul className="list-none m-0 mt-1.5 p-0">
-                {usernameErrors.map((err, idx) => (
-                  <li key={idx} className="text-danger text-xs">{err}</li>
-                ))}
-              </ul>
-            )}
-            {formData.username && isUsernameValid && (
-              <p className="m-0 mt-1.5 text-success text-xs">نام کاربری معتبر است</p>
-            )}
-          </div>
+              
+              {/* Username Validation Messages */}
+              {formData.username && usernameErrors.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {usernameErrors.map((err, idx) => (
+                    <p key={idx} className="text-red-500 text-xs flex items-center gap-1.5">
+                      <span>⚠️</span> {err}
+                    </p>
+                  ))}
+                </div>
+              )}
+              
+              {formData.username && isUsernameValid && (
+                <p className="mt-2 text-green-500 text-xs flex items-center gap-1.5">
+                  <span>✅</span> نام کاربری معتبر است
+                </p>
+              )}
+              
+              <p className="mt-1.5 text-text-muted text-xs">
+                فقط حروف انگلیسی، اعداد، زیرخط (_) و نقطه (.) - حداقل ۳ و حداکثر ۳۰ کاراکتر
+              </p>
+            </div>
 
-          <label className={fieldBox}>
-            <span className="sr-only">ایمیل</span>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`${fieldInput} text-left`}
-              disabled={isSubmitting}
-              required
-              dir="ltr"
-              placeholder="ایمیل"
-            />
-          </label>
-
-          <button type="button" onClick={() => !isSubmitting && setIsCalendarOpen(true)} className={fieldBox}>
-            <span className="flex-1 text-sm font-medium text-text-primary">
-              {selectedBirthDate ? formatPersianDate(selectedBirthDate) : 'تاریخ تولد'}
-            </span>
-            <CalendarIcon />
-          </button>
-          {formData.birthDate && (
-            <button type="button" onClick={clearBirthDate} disabled={isSubmitting} className="self-start text-xs text-danger">
-              حذف تاریخ
-            </button>
-          )}
-
-          <div className={fieldBox} role="radiogroup" aria-label="جنسیت">
-            <span className="flex-1 text-sm font-medium text-text-primary">جنسیت</span>
-            {[
-              { v: 'male', l: 'مرد' },
-              { v: 'female', l: 'زن' },
-              { v: 'other', l: 'سایر' },
-            ].map((g) => (
-              <button
-                key={g.v}
-                type="button"
-                role="radio"
-                aria-checked={formData.gender === g.v}
-                onClick={() => handleInputChange('gender', g.v)}
+            {/* Email */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">ایمیل *</label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all bg-bg-primary text-text-primary text-right rtl focus:border-accent-color focus:shadow-[0_0_0_3px_rgba(187,134,252,0.2)] disabled:opacity-60 disabled:cursor-not-allowed sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl"
                 disabled={isSubmitting}
-                className={`h-8 px-3 rounded-full text-xs ${
-                  formData.gender === g.v ? 'bg-accent-color text-on-accent' : 'border border-border-strong text-text-primary'
-                }`}
+                required
+                dir="ltr"
+              />
+            </div>
+
+            {/* Birth Date */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">تاریخ تولد</label>
+              <div className="flex gap-2.5 items-center">
+                <input
+                  type="text"
+                  value={selectedBirthDate ? formatPersianDate(selectedBirthDate) : ''}
+                  placeholder="انتخاب تاریخ تولد"
+                  readOnly
+                  onClick={() => !isSubmitting && setIsCalendarOpen(true)}
+                  className="flex-1 px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all bg-bg-primary text-text-primary text-right rtl cursor-pointer focus:border-accent-color focus:shadow-[0_0_0_3px_rgba(187,134,252,0.2)] sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsCalendarOpen(true)}
+                  disabled={isSubmitting}
+                  className="px-4 py-3 bg-bg-surface border border-border-color rounded-2xl cursor-pointer transition-all text-text-primary hover:bg-bg-hover hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed sm:px-3.5 sm:py-2.5"
+                >
+                  <CalendarIcon />
+                </button>
+              </div>
+              {formData.birthDate && (
+                <button
+                  type="button"
+                  onClick={clearBirthDate}
+                  disabled={isSubmitting}
+                  className="mt-2 px-3 py-1.5 bg-red-500/15 border-none rounded-xl text-red-500 text-xs cursor-pointer transition-all hover:bg-red-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  حذف تاریخ
+                </button>
+              )}
+            </div>
+
+            {/* Gender */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">جنسیت</label>
+              <div className="flex gap-6 items-center flex-wrap justify-start sm:gap-4">
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer text-text-primary sm:text-xs">
+                  <input
+                    type="radio"
+                    value="male"
+                    checked={formData.gender === 'male'}
+                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    disabled={isSubmitting}
+                    className="cursor-pointer disabled:cursor-not-allowed"
+                  />
+                  مرد
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer text-text-primary sm:text-xs">
+                  <input
+                    type="radio"
+                    value="female"
+                    checked={formData.gender === 'female'}
+                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    disabled={isSubmitting}
+                    className="cursor-pointer disabled:cursor-not-allowed"
+                  />
+                  زن
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer text-text-primary sm:text-xs">
+                  <input
+                    type="radio"
+                    value="other"
+                    checked={formData.gender === 'other'}
+                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    disabled={isSubmitting}
+                    className="cursor-pointer disabled:cursor-not-allowed"
+                  />
+                  سایر
+                </label>
+              </div>
+            </div>
+
+            {/* Addresses */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">آدرس‌ها</label>
+              <button
+                type="button"
+                onClick={() => setIsAddressModalOpen(true)}
+                disabled={isSubmitting}
+                className="w-full flex items-center gap-2.5 px-4 py-3 bg-bg-surface border border-border-color rounded-2xl cursor-pointer text-text-primary transition-all hover:bg-bg-hover hover:border-accent-color hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed justify-start sm:px-3.5 sm:py-2.5"
               >
-                {g.l}
+                <LocationIcon />
+                <span>مدیریت آدرس‌ها</span>
               </button>
-            ))}
+              {formData.addresses.length > 0 && (
+                <div className="mt-3 flex flex-col gap-2">
+                  {formData.addresses.map((addr, idx) => (
+                    <div key={idx} className="px-3 py-2 bg-bg-surface rounded-xl text-sm text-text-primary border border-border-color break-words text-right sm:text-xs sm:px-2.5 sm:py-1.5">
+                      {addr}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Bio */}
+            <div className="mb-5 sm:mb-4">
+              <label className="block mb-2 font-semibold text-text-primary text-sm sm:text-xs sm:mb-1.5 text-right">بیوگرافی</label>
+              <textarea
+                value={formData.bio}
+                onChange={(e) => handleInputChange('bio', e.target.value)}
+                rows={4}
+                placeholder="درباره خودتان بنویسید..."
+                className="w-full px-4 py-3 border border-border-color rounded-2xl text-sm outline-none resize-y font-sans text-right rtl bg-bg-primary text-text-primary transition-all focus:border-accent-color focus:shadow-[0_0_0_3px_rgba(187,134,252,0.2)] disabled:opacity-60 disabled:cursor-not-allowed sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl"
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-4 mt-6 sm:flex-col sm:gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting || (!!formData.username && !isUsernameValid)}
+                className="flex-1 bg-accent-color text-white border-none px-4 py-3 rounded-[40px] text-base font-semibold cursor-pointer transition-all hover:bg-accent-hover hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(187,134,252,0.3)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none sm:px-3.5 sm:py-2.5 sm:text-sm"
+              >
+                {isSubmitting ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+                className="flex-1 bg-bg-surface text-text-primary border border-border-color px-4 py-3 rounded-[40px] text-base font-semibold cursor-pointer transition-all hover:bg-bg-hover hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed sm:px-3.5 sm:py-2.5 sm:text-sm"
+              >
+                انصراف
+              </button>
+            </div>
           </div>
-
-          <button type="button" onClick={() => setIsAddressModalOpen(true)} disabled={isSubmitting} className={fieldBox}>
-            <span className="flex-1 text-sm font-medium text-text-primary truncate">
-              {formData.addresses.length > 0 ? formData.addresses.join('، ') : 'آدرس‌ها'}
-            </span>
-            <LocationIcon />
-          </button>
-
-          <label className="block">
-            <span className="sr-only">بیوگرافی</span>
-            <textarea
-              value={formData.bio}
-              onChange={(e) => handleInputChange('bio', e.target.value)}
-              placeholder="بیو"
-              className="w-full h-34.75 px-5 py-4 rounded-xl border border-border-strong bg-bg-primary text-sm font-medium text-text-primary placeholder:text-text-primary outline-none resize-none"
-              disabled={isSubmitting}
-            />
-          </label>
-        </div>
-
-        <div className="flex gap-5 mt-8">
-          <Button type="submit" className="flex-1" disabled={isSubmitting || (!!formData.username && !isUsernameValid)}>
-            {isSubmitting ? 'در حال ذخیره...' : 'ذخیره'}
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={handleCancel} disabled={isSubmitting}>
-            انصراف
-          </Button>
-        </div>
-      </form>
+        </form>
+      </div>
 
       {/* Address Modal */}
       <Modal
@@ -583,12 +694,12 @@ export default function EditProfilePage() {
               onChange={(e) => setNewAddress(e.target.value)}
               placeholder="آدرس خود را وارد کنید..."
               onKeyDown={(e) => e.key === 'Enter' && handleAddAddress()}
-              className="flex-1 px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all bg-bg-primary text-text-primary text-right rtl focus:border-accent-color  sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl"
+              className="flex-1 px-4 py-3 border border-border-color rounded-2xl text-sm outline-none transition-all bg-bg-primary text-text-primary text-right rtl focus:border-accent-color focus:shadow-[0_0_0_3px_rgba(187,134,252,0.2)] sm:px-3.5 sm:py-2.5 sm:text-xs sm:rounded-xl"
             />
             <button
               type="button"
               onClick={handleAddAddress}
-              className="w-[46px] h-[46px] bg-accent-color text-on-accent border-none rounded-2xl cursor-pointer flex items-center justify-center transition-all hover:bg-accent-hover hover:scale-105 sm:w-[42px] sm:h-[42px]"
+              className="w-[46px] h-[46px] bg-accent-color text-white border-none rounded-2xl cursor-pointer flex items-center justify-center transition-all hover:bg-accent-hover hover:scale-105 sm:w-[42px] sm:h-[42px]"
             >
               <PlusIcon />
             </button>
@@ -625,17 +736,19 @@ export default function EditProfilePage() {
         </div>
       </Modal>
 
-      {/* تقویم تاریخ تولد در شیت مشکی فیگما */}
-      <DateTimeSheet
-        open={isCalendarOpen}
+      {/* Calendar Modal */}
+      <Modal
+        isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}
-        initial={selectedBirthDate}
-        title="تاریخ تولد"
-        onConfirm={(d) => {
-          handleDateSelect(d);
-          setIsCalendarOpen(false);
-        }}
-      />
-    </AppShell>
+        noPadding
+        size="sm"
+      >
+        <PersianCalendar
+          onSelect={handleDateSelect}
+          onClose={() => setIsCalendarOpen(false)}
+          initialDate={selectedBirthDate || new Date()}
+        />
+      </Modal>
+    </>
   );
 }

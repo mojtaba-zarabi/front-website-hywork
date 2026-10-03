@@ -32,14 +32,15 @@
  * عرض ثابت در دسکتاپ، تمام صفحه در موبایل
  */
 .chatList {
-  width: 440px;
-  background: var(--color-bg-primary);
-  border-left: 0.5px solid var(--color-border-strong);
+  width: 380px;
+  background: var(--color-bg-secondary);
+  border-left: 1px solid var(--color-border-color);
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   flex-shrink: 0;
+  transition: width 0.3s ease, transform 0.3s ease;
 }
 
 /** حالت مخفی برای موبایل */
@@ -53,8 +54,12 @@
 
 /** هدر جستجو با دکمه بازگشت */
 .chatSearch {
-  padding: 0 16px 16px;
-  background: var(--color-bg-primary);
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border-color);
+  gap: 12px;
+  background: var(--color-bg-secondary);
   flex-shrink: 0;
 }
 
@@ -78,14 +83,11 @@
 
 /** کانتینر جستجو */
 .searchWrapper {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 57px;
-  padding: 0 18px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 28.5px;
-  color: #1e1e1e;
+  gap: 8px;
+  color: var(--color-text-muted);
 }
 
 /** آیکون جستجو */
@@ -100,14 +102,14 @@
   flex: 1;
   border: none;
   outline: none;
-  font-size: 20px;
+  font-size: 14px;
   background: transparent;
   color: var(--color-text-primary);
   font-family: var(--font-sans, inherit);
 }
 
 .searchInput::placeholder {
-  color: #adadad;
+  color: var(--color-text-muted);
 }
 
 /* ============================================================
@@ -145,13 +147,13 @@
 /** هر آیتم چت */
 .chatItem {
   display: flex;
-  align-items: flex-start;
-  min-height: 75px;
-  padding: 0 16px;
+  align-items: center;
+  padding: 12px 16px;
   cursor: pointer;
   transition: background 0.2s ease;
+  border-bottom: 1px solid var(--color-border-light);
   position: relative;
-  gap: 15px;
+  gap: 12px;
 }
 
 .chatItem:hover {
@@ -194,7 +196,7 @@
 .chatInfo {
   flex: 1;
   min-width: 0;
-  padding-top: 2px;
+  margin-right: 12px;
 }
 
 /** نام کاربر یا گروه */
@@ -202,7 +204,7 @@
   font-weight: 600;
   font-size: 15px;
   color: var(--color-text-primary);
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -210,8 +212,8 @@
 
 /** آخرین پیام */
 .chatMessage {
-  font-size: 12px;
-  color: var(--color-text-primary);
+  font-size: 13px;
+  color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -219,43 +221,44 @@
 
 /** متادیتا (زمان + تعداد پیام‌های نخوانده) */
 .chatMeta {
+  text-align: left;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding-top: 2px;
+  align-items: flex-end;
+  gap: 4px;
 }
 
 /** زمان آخرین پیام */
 .chatTime {
-  font-size: 12px;
-  color: #9e9e9e;
+  font-size: 11px;
+  color: var(--color-text-muted);
 }
 
 /** نشانگر پیام‌های نخوانده */
 .chatUnread {
   background: var(--color-accent-color);
-  color: var(--color-on-accent);
+  color: white;
   border-radius: 50%;
-  width: 21px;
-  height: 21px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 /** نشانگر آنلاین بودن */
 .onlineIndicator {
   position: absolute;
-  top: 44px;
-  right: 18px;
+  bottom: 2px;
+  right: 2px;
   width: 12px;
   height: 12px;
-  background: var(--color-online);
+  background: #4ade80;
   border-radius: 50%;
-  border: 2px solid var(--color-bg-primary);
+  border: 2px solid var(--color-bg-secondary);
 }
 
 /* ============================================================
@@ -286,10 +289,10 @@
 .chatHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 70px;
-  padding: 0 16px;
-  background: var(--color-bg-primary);
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border-color);
+  background: var(--color-bg-secondary);
   flex-shrink: 0;
 }
 
@@ -319,7 +322,7 @@
 /** نام کاربر */
 .chatHeaderName {
   font-weight: 600;
-  font-size: 20px;
+  font-size: 16px;
   color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -328,8 +331,8 @@
 
 /** وضعیت کاربر */
 .chatHeaderStatus {
-  font-size: 10px;
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 /* ============================================================
@@ -340,10 +343,10 @@
 .chatMessagesArea {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 25px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 8px;
   background: var(--color-bg-primary);
   scrollbar-width: thin;
 }
@@ -378,12 +381,12 @@
 
 /** پیام ارسالی (من) */
 .messageWrapperMe {
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 /** پیام دریافتی (دیگری) */
 .messageWrapperOther {
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 /** کانتینر پیام */
@@ -395,10 +398,9 @@
 /** حباب پیام ارسالی */
 .messageBubbleMe {
   background: var(--color-accent-color);
-  color: var(--color-on-accent);
-  padding: 10px 12px 6px;
-  min-width: 172px;
-  border-radius: 0;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 18px 18px 18px 4px;
   font-size: 14px;
   word-wrap: break-word;
   line-height: 1.5;
@@ -406,11 +408,10 @@
 
 /** حباب پیام دریافتی */
 .messageBubbleOther {
-  background: #f2f3f5;
-  color: #000000;
-  padding: 10px 12px 6px;
-  min-width: 172px;
-  border-radius: 0;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  padding: 10px 14px;
+  border-radius: 18px 18px 4px 18px;
   font-size: 14px;
   word-wrap: break-word;
   line-height: 1.5;
@@ -464,8 +465,9 @@
 
 /** زمان پیام */
 .messageTime {
-  font-size: 12px;
-  color: inherit;
+  font-size: 10px;
+  opacity: 0.6;
+  color: var(--color-text-muted);
 }
 
 /** وضعیت پیام (خوانده/نخوانده) */
@@ -560,8 +562,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 9px 16px 11px;
-  background: var(--color-bg-primary);
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border-color);
+  background: var(--color-bg-secondary);
   flex-shrink: 0;
 }
 
@@ -570,10 +573,12 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  color: #ffffff;
+  color: var(--color-text-muted);
+  transition: background 0.2s ease;
 }
 
 .attachBtn:hover {
@@ -583,15 +588,15 @@
 /** ورودی متن پیام */
 .messageInput {
   flex: 1;
-  min-width: 0;
-  height: 100%;
-  padding: 0 4px;
-  border: none;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-color);
+  border-radius: 24px;
   outline: none;
   font-size: 14px;
-  background: transparent;
-  color: #ffffff;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font-family: var(--font-sans, inherit);
+  transition: border-color 0.2s ease;
 }
 
 .messageInput:focus {
@@ -599,26 +604,28 @@
 }
 
 .messageInput::placeholder {
-  color: rgba(255, 255, 255, 0.37);
+  color: var(--color-text-muted);
 }
 
 /** دکمه ارسال */
 .sendBtn {
-  background: #000000;
+  background: var(--color-accent-color);
   border: none;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #ffffff;
+  color: white;
+  transition: transform 0.2s ease, background 0.2s ease;
   flex-shrink: 0;
 }
 
 .sendBtn:hover {
-  background: #1d1d1d;
+  background: var(--color-accent-hover);
+  transform: scale(1.05);
 }
 
 .sendBtn:active {
@@ -946,17 +953,84 @@
    ============================================================ */
 
 @media (max-width: 480px) {
+  /** آیتم‌های چت */
+  .chatItem {
+    padding: 10px 12px;
+  }
+  
+  .chatName {
+    font-size: 14px;
+  }
+  
+  .chatMessage {
+    font-size: 12px;
+  }
+  
+  /** هدر چت */
+  .chatHeader {
+    padding: 10px 16px;
+  }
+  
+  /** منطقه پیام‌ها */
+  .chatMessagesArea {
+    padding: 12px;
+  }
+  
+  /** حباب‌های پیام */
+  .messageBubbleMe,
+  .messageBubbleOther {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .messageContainer {
+    max-width: 85%;
+  }
+  
+  /** ورودی پیام */
+  .chatInputArea {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+  
+  .messageInput {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
   /** مودال */
   .modalGrid {
     gap: 12px;
   }
-
+  
   .modalItem span {
     font-size: 12px;
   }
-
+  
   .emojiItem {
     font-size: 24px;
+  }
+  
+  /** دکمه‌ها */
+  .sendBtn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .attachBtn {
+    padding: 6px;
+  }
+  
+  /** آواتار */
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .avatarPlaceholder {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
   }
 }
 
@@ -992,7 +1066,7 @@
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .chatList {
-    width: 320px;
+    width: 300px;
   }
 }
 
@@ -1000,11 +1074,21 @@
    1️⃣9️⃣ ریسپانسیو - دسکتاپ متوسط (1025px تا 1440px)
    ============================================================ */
 
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .chatList {
+    width: 350px;
+  }
+}
 
 /* ============================================================
    2️⃣0️⃣ ریسپانسیو - دسکتاپ بزرگ (1441px به بالا)
    ============================================================ */
 
+@media (min-width: 1441px) {
+  .chatList {
+    width: 420px;
+  }
+}
 
 /* ============================================================
    2️⃣1️⃣ پشتیبانی از تم تاریک
@@ -1049,60 +1133,4 @@
 /** اسکرول نرم */
 .smoothScroll {
   scroll-behavior: smooth;
-}
-/* ============================================================
-   کادر نوشتن پیام فیگما: کپسول مشکی با گوشه‌ی ۲۰ و آیکون‌های سفید
-   ============================================================ */
-.composer {
-  flex: 1;
-  min-width: 0;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 10px;
-  background: #000000;
-  border-radius: 20px;
-}
-
-.listHeader {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 80px;
-  padding: 0 14px;
-  flex-shrink: 0;
-}
-
-.listTitle {
-  margin: 0;
-  font-size: 25px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.headerIconBtn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--color-text-primary);
-  cursor: pointer;
-}
-
-@media (max-width: 767px) {
-  .chatList {
-    width: 100%;
-    border-left: none;
-    padding-bottom: 56px;
-  }
-}
-
-@media (min-width: 768px) {
-  .messagesApp {
-    padding-right: 85px;
-  }
 }

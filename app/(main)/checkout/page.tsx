@@ -1,14 +1,11 @@
 // src/app/(main)/checkout/page.tsx
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import AppShell from '@/components/AppShell';
-import PageHeader from '@/components/PageHeader';
-import BottomSheet, { SheetActions } from '@/components/BottomSheet';
-import WalletCard from '@/components/WalletCard';
-import { Button, TextField, RadioDot } from '@/components/FormControls';
+import Sidebar from '@/components/Sidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { toPersianNumber, formatPrice } from '@/utils/numberUtils';
 import { useToast } from '@/components/NotificationToast';
 
@@ -46,6 +43,55 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // هوک‌های سفارشی - استاندارد React 19
 // ============================================
 
+/**
+ * هوک تشخیص دستگاه موبایل با استفاده از useSyncExternalStore
+ * این روش استاندارد React 19 برای اشتراک‌گذاری state با سیستم‌های خارجی است
+ * 
+ * @param query - کوئری مدیا برای تشخیص
+ * @returns boolean - آیا دستگاه موبایل است یا خیر
+ */
+function useMediaQuery(query: string): boolean {
+  // تابع اشتراک‌گذاری برای گوش دادن به تغییرات
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      // بررسی وجود window (برای جلوگیری از خطا در SSR)
+      if (typeof window === 'undefined') {
+        return () => {};
+      }
+
+      const media = window.matchMedia(query);
+      
+      // افزودن listener
+      media.addEventListener('change', callback);
+      
+      // لاگ: ثبت اشتراک
+      console.log('📱 اشتراک مدیا:', { query, matches: media.matches });
+
+      // تابع پاک‌سازی
+      return () => {
+        media.removeEventListener('change', callback);
+        console.log('🧹 لغو اشتراک مدیا:', query);
+      };
+    },
+    [query]
+  );
+
+  // تابع دریافت مقدار فعلی
+  const getSnapshot = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.matchMedia(query).matches;
+  }, [query]);
+
+  // تابع مقدار برای SSR
+  const getServerSnapshot = useCallback(() => {
+    return false; // مقدار پیش‌فرض در سرور
+  }, []);
+
+  // استفاده از useSyncExternalStore برای همگام‌سازی با سیستم خارجی
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
 
 // ============================================
 // تعریف نوع‌های داده
@@ -131,50 +177,161 @@ const MotorcycleIcon = () => (
 // کامپوننت‌های زیرمجموعه
 // ============================================
 
-// استان‌های برگه‌ی انتخاب استان در فیگما (map / Address)
-const PROVINCES = [
-  'تهران', 'خراسان رضوی', 'اصفهان', 'البرز', 'فارس', 'آذربایجان شرقی', 'قم', 'خوزستان',
-  'کرمانشاه', 'آذربایجان غربی', 'گیلان', 'زنجان', 'مازندران', 'کرمان', 'یزد', 'همدان',
-];
-
-// بانک‌های صفحه‌ی پرداخت فیگما
-const BANKS = [
-  { id: 'melli', name: 'بانک ملی', logo: '/images/brand/bank-melli.png', size: 64 },
-  { id: 'mellat', name: 'بانک ملت', logo: '/images/brand/bank-mellat.png', size: 34 },
-  { id: 'saman', name: 'بانک سامان', logo: '/images/brand/bank-saman.png', size: 56 },
-];
-
-// ردیف انتخابی فیگما: ۷۶ پیکسل، گوشه‌ی ۱۰، خط #d8d8d8، رادیو سمت راست
-const ChoiceRow = ({
-  selected,
+/**
+ * کامپوننت گزینه روش ارسال
+ */
+const ShippingOptionCard = ({
+  option,
+  isSelected,
   onSelect,
-  title,
-  desc,
-  end,
 }: {
-  selected: boolean;
-  onSelect: () => void;
-  title: React.ReactNode;
-  desc?: React.ReactNode;
-  end?: React.ReactNode;
-}) => (
-  <button
-    type="button"
-    role="radio"
-    aria-checked={selected}
-    onClick={onSelect}
-    className={`w-full min-h-19 flex items-center gap-4 px-4 rounded-[10px] border text-right ${
-      selected ? 'border-border-strong' : 'border-[#d8d8d8]'
-    }`}
-  >
-    <RadioDot checked={selected} />
-    <span className="flex-1 min-w-0">
-      <span className="block text-base text-text-primary">{title}</span>
-      {desc && <span className="block text-xs text-text-secondary mt-0.5">{desc}</span>}
-    </span>
-    {end}
-  </button>
-);
+  option: ShippingOption;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}) => {
+  const Icon = option.icon;
+
+  return (
+    <div
+      onClick={() => onSelect(option.id)}
+      className={`p-4 rounded-2xl border-2 cursor-pointer transition-colors bg-bg-primary text-text-primary ${
+        isSelected ? 'border-accent-color bg-bg-surface' : 'border-border-color hover:border-accent-color/50'
+      }`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(option.id);
+        }
+      }}
+    >
+      <div className="mb-3 text-text-primary inline-flex">
+        <Icon />
+      </div>
+      <div className="text-sm sm:text-base font-semibold mb-1">{option.label}</div>
+      <div className="text-sm font-bold text-orange-600 mb-1">
+        {option.price === 0 ? 'رایگان' : formatPrice(option.price)}
+      </div>
+      <div className="text-[11px] text-text-muted">{option.desc}</div>
+    </div>
+  );
+};
+
+/**
+ * کامپوننت گزینه روش پرداخت
+ */
+const PaymentOptionCard = ({
+  option,
+  isSelected,
+  onSelect,
+}: {
+  option: PaymentOption;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}) => {
+  const Icon = option.icon;
+
+  return (
+    <div
+      onClick={() => onSelect(option.id)}
+      className={`p-4 rounded-2xl border-2 cursor-pointer transition-colors bg-bg-primary text-text-primary ${
+        isSelected ? 'border-accent-color bg-bg-surface' : 'border-border-color hover:border-accent-color/50'
+      }`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(option.id);
+        }
+      }}
+    >
+      <div className="mb-3 text-text-primary inline-flex">
+        <Icon />
+      </div>
+      <div className="text-sm sm:text-base font-semibold mb-1">{option.label}</div>
+      <div className="text-[11px] text-text-muted">{option.desc}</div>
+    </div>
+  );
+};
+
+/**
+ * کامپوننت خلاصه سبد خرید
+ */
+const OrderSummary = ({
+  cartItems,
+  totalPrice,
+  shippingMethod,
+  getTotalWithShipping,
+}: {
+  cartItems: CartItem[];
+  totalPrice: number;
+  shippingMethod: string;
+  getTotalWithShipping: () => number;
+}) => {
+  return (
+    <div className="bg-bg-secondary rounded-2xl p-4 sm:p-6 border border-border-color shadow-[0_1px_3px_var(--color-shadow)] sticky top-25">
+      <h3 className="text-base sm:text-lg font-semibold text-text-primary mb-4">
+        خلاصه سبد خرید
+      </h3>
+
+      {/* لیست آیتم‌ها */}
+      <div className="max-h-75 overflow-y-auto">
+        {cartItems.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center gap-3 py-3 border-b border-border-color last:border-b-0"
+          >
+            <div className="w-12 h-12 relative rounded-lg overflow-hidden shrink-0 bg-bg-surface">
+              <Image
+                src={item.image}
+                alt={item.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-text-primary truncate">
+                {item.title}
+              </div>
+              <div className="text-[11px] text-text-muted">
+                تعداد: {toPersianNumber(item.quantity)}
+              </div>
+            </div>
+            <div className="text-sm font-bold text-orange-600 whitespace-nowrap">
+              {formatPrice(item.price * item.quantity)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-px bg-border-color my-3" />
+
+      {/* جزئیات قیمت */}
+      <div className="flex justify-between text-sm text-text-secondary mb-2">
+        <span>قیمت کالاها</span>
+        <span>{formatPrice(totalPrice)} تومان</span>
+      </div>
+      <div className="flex justify-between text-sm text-text-secondary mb-2">
+        <span>هزینه ارسال</span>
+        <span>
+          {shippingMethod ? formatPrice(SHIPPING_COSTS[shippingMethod] || 0) : 'انتخاب نشده'} تومان
+        </span>
+      </div>
+
+      <div className="h-px bg-border-color my-3" />
+
+      {/* جمع کل */}
+      <div className="flex justify-between text-base sm:text-lg font-bold text-text-primary">
+        <span>قابل پرداخت</span>
+        <span>{formatPrice(getTotalWithShipping())} تومان</span>
+      </div>
+    </div>
+  );
+};
 
 // ============================================
 // کامپوننت اصلی
@@ -198,6 +355,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { success, error } = useToast();
   
+  // استفاده از useMediaQuery با استاندارد React 19
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   // ============================================
   // وضعیت‌های کامپوننت
@@ -234,10 +393,6 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [bank, setBank] = useState<string>(BANKS[1].id);
-  const [provinceOpen, setProvinceOpen] = useState(false);
-  const [provinceQuery, setProvinceQuery] = useState('');
-  const [pendingProvince, setPendingProvince] = useState('');
 
   // ============================================
   // محاسبات
@@ -445,181 +600,249 @@ export default function CheckoutPage() {
 
   // اگر سبد خرید خالی است
   if (cartItems.length === 0) {
+    console.warn('⚠️ سبد خرید خالی است');
+
     return (
-      <AppShell>
-        <PageHeader title="اطلاعات سفارش" />
-        <div className="text-center py-16 px-4">
-          <h2 className="text-lg font-medium text-text-primary mb-5">سبد خرید شما خالی است</h2>
-          <Button size="md" onClick={() => router.push('/')}>بازگشت به فروشگاه</Button>
+      <>
+        {!isMobile && <Sidebar />}
+        {isMobile && <MobileBottomNav />}
+        <div className="min-h-[calc(100vh-70px)] bg-bg-primary text-center py-12 sm:py-16 md:py-20 px-4 md:ms-65">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary mb-4">
+            سبد خرید شما خالی است
+          </h2>
+          <button
+            onClick={() => {
+              console.log('🔙 بازگشت به فروشگاه');
+              router.push('/');
+            }}
+            className="px-5 sm:px-6 py-2.5 sm:py-3 bg-accent-color text-white border-none rounded-[40px] cursor-pointer transition-colors hover:bg-accent-hover text-sm sm:text-base"
+          >
+            بازگشت به فروشگاه
+          </button>
         </div>
-      </AppShell>
+      </>
     );
   }
 
-  const filteredProvinces = PROVINCES.filter((p) => p.includes(provinceQuery.trim()));
+  // لاگ رندر
+  console.log('🖥️ رندر صفحه تکمیل سفارش:', {
+    isMobile,
+    cartItemsCount: cartItems.length,
+    totalPrice,
+    shippingMethod,
+    paymentMethod,
+    isSubmitting,
+    timestamp: new Date().toISOString(),
+  });
 
-  // فیگما (invioce customer / Address / Payment): سربرگ مشکی با مبلغ قابل پرداخت، اقلام،
-  // فرم آدرس با فیلدهای ۵۶ پیکسلی، روش ارسال و پرداخت با ردیف‌های رادیویی، جمع کل و دکمه‌ی پرداخت
   return (
-    <AppShell>
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="bg-black text-white min-h-57.75">
-          <PageHeader title="اطلاعات سفارش" inverted />
-          <div className="px-4 pt-2 text-center">
-            <div className="text-[60px] font-semibold leading-18">{formatPrice(getTotalWithShipping())}</div>
-            <div className="text-sm text-[#b7b7b7]">مبلغ قابل پرداخت (تومان)</div>
-          </div>
+    <>
+      {/* نوار کناری و ناوبری موبایل */}
+      {!isMobile && <Sidebar />}
+      {isMobile && <MobileBottomNav />}
+
+      {/* محتوای اصلی */}
+      <div className="min-h-[calc(100vh-70px)] bg-bg-primary p-4 sm:p-6 md:p-8 mb-20 md:pb-8">
+        {/* هدر */}
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary mb-2">
+            تکمیل سفارش
+          </h1>
+          <p className="text-sm sm:text-base text-text-muted">
+            اطلاعات خود را کامل کنید
+          </p>
         </div>
 
-        <div className="px-4">
-          <ul className="list-none m-0 mt-12 p-0 flex flex-col gap-5">
-            {cartItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-6">
-                <div className="relative w-25 h-25 rounded-lg overflow-hidden shrink-0 bg-placeholder">
-                  <Image src={item.image} alt={item.title} fill sizes="100px" className="object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-lg text-text-primary leading-5.5">{item.title}</div>
-                  <div className="mt-2 text-sm text-text-secondary">
-                    {toPersianNumber(item.quantity)} × {formatPrice(item.price)}
+        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 max-w-300 mx-auto">
+          {/* بخش فرم */}
+          <div className="flex-2">
+            <form onSubmit={handleSubmit}>
+              {/* اطلاعات شخصی */}
+              <div className="bg-bg-secondary rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border border-border-color shadow-[0_1px_3px_var(--color-shadow)]">
+                <h3 className="text-base sm:text-lg font-semibold text-text-primary mb-4 sm:mb-5 pb-3 border-b border-border-color">
+                  اطلاعات شخصی
+                </h3>
+
+                <div className="flex flex-col md:flex-row gap-4 md:gap-5 mb-4 md:mb-5">
+                  <div className="flex-1">
+                    <label className="block mb-2 font-medium text-text-secondary text-xs sm:text-sm">
+                      نام و نام خانوادگی *
+                    </label>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border rounded-xl text-sm outline-none transition-colors bg-bg-primary text-text-primary font-sans ${
+                        errors.fullName ? 'border-red-500' : 'border-border-color focus:border-accent-color'
+                      }`}
+                      placeholder="مثال: علی محمدی"
+                      aria-invalid={!!errors.fullName}
+                    />
+                    {errors.fullName && (
+                      <span className="text-red-500 text-[11px] mt-1 block" role="alert">
+                        {errors.fullName}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <label className="block mb-2 font-medium text-text-secondary text-xs sm:text-sm">
+                      شماره تماس *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border rounded-xl text-sm outline-none transition-colors bg-bg-primary text-text-primary font-sans ${
+                        errors.phone ? 'border-red-500' : 'border-border-color focus:border-accent-color'
+                      }`}
+                      placeholder="09123456789"
+                      aria-invalid={!!errors.phone}
+                    />
+                    {errors.phone && (
+                      <span className="text-red-500 text-[11px] mt-1 block" role="alert">
+                        {errors.phone}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </li>
-            ))}
-          </ul>
 
-          <h2 className="m-0 mt-12 mb-5 text-lg font-medium text-text-primary">آدرس</h2>
-          <div className="flex flex-col gap-3">
-            <TextField name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="نام و نام خانوادگی" error={errors.fullName} aria-invalid={!!errors.fullName} />
-            <TextField name="phone" type="tel" value={formData.phone} onChange={handleInputChange} placeholder="شماره تماس" error={errors.phone} aria-invalid={!!errors.phone} />
-            <TextField name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="ایمیل (اختیاری)" error={errors.email} aria-invalid={!!errors.email} />
-            <button
-              type="button"
-              onClick={() => setProvinceOpen(true)}
-              className="w-full h-14 flex items-center gap-3 px-4 rounded-xl border border-border-strong text-right"
-            >
-              <span className={`flex-1 text-base ${formData.city ? 'text-text-primary' : 'text-text-muted'}`}>
-                {formData.city || 'استان / شهر'}
-              </span>
-              <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-                <path d="m15 5-7 7 7 7" />
-              </svg>
-            </button>
-            <label className="block">
-              <span className="sr-only">آدرس دقیق</span>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange(e as unknown as React.ChangeEvent<HTMLInputElement>)}
-                placeholder="آدرس دقیق"
-                aria-invalid={!!errors.address}
-                className={`w-full h-26 p-4 rounded-xl border ${errors.address ? 'border-danger' : 'border-border-strong'} bg-bg-primary text-base text-text-primary placeholder:text-text-muted outline-none resize-none focus:border-2`}
-              />
-              {errors.address && <span className="block mt-1.5 text-xs text-danger">{errors.address}</span>}
-            </label>
-            <TextField name="postalCode" value={formData.postalCode} onChange={handleInputChange} placeholder="کد پستی (اختیاری)" />
-          </div>
+                <div className="flex flex-col md:flex-row gap-4 md:gap-5 mb-4 md:mb-5">
+                  <div className="flex-1">
+                    <label className="block mb-2 font-medium text-text-secondary text-xs sm:text-sm">
+                      ایمیل (اختیاری)
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border rounded-xl text-sm outline-none transition-colors bg-bg-primary text-text-primary font-sans ${
+                        errors.email ? 'border-red-500' : 'border-border-color focus:border-accent-color'
+                      }`}
+                      placeholder="example@site.com"
+                      aria-invalid={!!errors.email}
+                    />
+                    {errors.email && (
+                      <span className="text-red-500 text-[11px] mt-1 block" role="alert">
+                        {errors.email}
+                      </span>
+                    )}
+                  </div>
 
-          <h2 className="m-0 mt-12 mb-5 text-lg font-medium text-text-primary">روش ارسال</h2>
-          <div className="flex flex-col gap-2.5" role="radiogroup" aria-label="روش ارسال">
-            {shippingOptions.map((option) => (
-              <ChoiceRow
-                key={option.id}
-                selected={shippingMethod === option.id}
-                onSelect={() => handleShippingSelect(option.id)}
-                title={option.label}
-                desc={option.desc}
-                end={<span className="text-sm text-text-primary whitespace-nowrap">{option.price === 0 ? 'رایگان' : formatPrice(option.price)}</span>}
-              />
-            ))}
-          </div>
+                  <div className="flex-1">
+                    <label className="block mb-2 font-medium text-text-secondary text-xs sm:text-sm">
+                      کد پستی (اختیاری)
+                    </label>
+                    <input
+                      type="text"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-border-color rounded-xl text-sm outline-none transition-colors bg-bg-primary text-text-primary font-sans focus:border-accent-color"
+                      placeholder="۱۲۳۴۵۶۷۸۹۰"
+                    />
+                  </div>
+                </div>
 
-          <h2 className="m-0 mt-12 mb-5 text-lg font-medium text-text-primary">پرداخت</h2>
-          <div className="-mx-4 mb-8">
-            <WalletCard balance={formatPrice(50000000)} owner={formData.fullName || 'کیف پول من'} />
-          </div>
-          <div className="flex flex-col gap-2.5" role="radiogroup" aria-label="روش پرداخت">
-            {paymentOptions.map((option) => (
-              <ChoiceRow
-                key={option.id}
-                selected={paymentMethod === option.id}
-                onSelect={() => handlePaymentSelect(option.id)}
-                title={option.label}
-                desc={option.desc}
-              />
-            ))}
-          </div>
+                <div className="flex flex-col md:flex-row gap-4 md:gap-5">
+                  <div className="flex-1">
+                    <label className="block mb-2 font-medium text-text-secondary text-xs sm:text-sm">
+                      استان / شهر
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-border-color rounded-xl text-sm outline-none transition-colors bg-bg-primary text-text-primary font-sans focus:border-accent-color"
+                      placeholder="تهران"
+                    />
+                  </div>
 
-          {paymentMethod === PAYMENT_METHODS.ONLINE && (
-            <div className="mt-5 flex flex-col gap-2.5" role="radiogroup" aria-label="انتخاب بانک">
-              {BANKS.map((b) => (
-                <ChoiceRow
-                  key={b.id}
-                  selected={bank === b.id}
-                  onSelect={() => setBank(b.id)}
-                  title={b.name}
-                  end={
-                    <span className="w-16 h-16 flex items-center justify-center shrink-0">
-                      <Image src={b.logo} alt="" width={b.size} height={b.size} className="object-contain" />
-                    </span>
-                  }
-                />
-              ))}
-            </div>
-          )}
+                  <div className="flex-1">
+                    <label className="block mb-2 font-medium text-text-secondary text-xs sm:text-sm">
+                      آدرس دقیق *
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border rounded-xl text-sm outline-none transition-colors bg-bg-primary text-text-primary font-sans ${
+                        errors.address ? 'border-red-500' : 'border-border-color focus:border-accent-color'
+                      }`}
+                      placeholder="خیابان، کوچه، پلاک..."
+                      aria-invalid={!!errors.address}
+                    />
+                    {errors.address && (
+                      <span className="text-red-500 text-[11px] mt-1 block" role="alert">
+                        {errors.address}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-          <div className="mt-12 h-15.5 flex items-center justify-between px-5 rounded-[10px] border border-border-strong">
-            <span className="text-sm font-medium text-text-primary">مجموع</span>
-            <span className="text-2xl text-text-primary">{formatPrice(getTotalWithShipping())}</span>
-          </div>
+              {/* روش ارسال */}
+              <div className="bg-bg-secondary rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border border-border-color shadow-[0_1px_3px_var(--color-shadow)]">
+                <h3 className="text-base sm:text-lg font-semibold text-text-primary mb-4 sm:mb-5 pb-3 border-b border-border-color">
+                  روش ارسال
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {shippingOptions.map((option) => (
+                    <ShippingOptionCard
+                      key={option.id}
+                      option={option}
+                      isSelected={shippingMethod === option.id}
+                      onSelect={handleShippingSelect}
+                    />
+                  ))}
+                </div>
+              </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-10 mb-10 w-full h-15.5 rounded-[10px] bg-accent-color text-on-accent text-lg disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'در حال ثبت سفارش...' : 'تأیید و پرداخت'}
-          </button>
-        </div>
-      </form>
+              {/* روش پرداخت */}
+              <div className="bg-bg-secondary rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border border-border-color shadow-[0_1px_3px_var(--color-shadow)]">
+                <h3 className="text-base sm:text-lg font-semibold text-text-primary mb-4 sm:mb-5 pb-3 border-b border-border-color">
+                  روش پرداخت
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {paymentOptions.map((option) => (
+                    <PaymentOptionCard
+                      key={option.id}
+                      option={option}
+                      isSelected={paymentMethod === option.id}
+                      onSelect={handlePaymentSelect}
+                    />
+                  ))}
+                </div>
+              </div>
 
-      <BottomSheet
-        open={provinceOpen}
-        onClose={() => setProvinceOpen(false)}
-        title={<span className="text-xl font-bold">استان</span>}
-        footer={
-          <SheetActions
-            onCancel={() => setProvinceOpen(false)}
-            onConfirm={() => {
-              if (pendingProvince) setFormData((prev) => ({ ...prev, city: pendingProvince }));
-              setProvinceOpen(false);
-            }}
-          />
-        }
-      >
-        <input
-          value={provinceQuery}
-          onChange={(e) => setProvinceQuery(e.target.value)}
-          aria-label="جستجوی استان"
-          className="w-full h-14 px-4 rounded-[10px] bg-white text-black text-base outline-none mb-3"
-        />
-        <ul className="list-none m-0 p-0" role="listbox" aria-label="استان‌ها">
-          {filteredProvinces.map((p) => (
-            <li key={p}>
+              {/* دکمه ثبت سفارش */}
               <button
-                type="button"
-                role="option"
-                aria-selected={pendingProvince === p}
-                onClick={() => setPendingProvince(p)}
-                className={`w-full h-10 text-right text-lg ${pendingProvince === p ? 'text-white font-semibold' : 'text-white/70'}`}
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-accent-color text-white border-none px-4 py-3.5 rounded-[40px] text-sm sm:text-base font-semibold cursor-pointer transition-all hover:bg-accent-hover hover:-translate-y-px disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none mt-2"
               >
-                {p}
+                {isSubmitting ? 'در حال ثبت سفارش...' : 'ثبت سفارش و پرداخت'}
               </button>
-            </li>
-          ))}
-        </ul>
-      </BottomSheet>
-    </AppShell>
+            </form>
+          </div>
+
+          {/* بخش خلاصه سفارش */}
+          <div className="flex-1">
+            <OrderSummary
+              cartItems={cartItems}
+              totalPrice={totalPrice}
+              shippingMethod={shippingMethod}
+              getTotalWithShipping={getTotalWithShipping}
+            />
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

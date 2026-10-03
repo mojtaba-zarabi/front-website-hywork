@@ -272,11 +272,11 @@ export default function LoginPage() {
 
   return (
     <main 
-      className="min-h-screen bg-black px-4 pt-0 pb-9"
+      className="min-h-screen flex items-center justify-center bg-bg-primary p-4"
       role="main"
       aria-label="صفحه ورود"
     >
-      <div className="w-full max-w-102 mx-auto">
+      <div className="w-full max-w-md">
         <LoginForm 
           onSubmit={handleLogin} 
           isLoading={isLoading} 
